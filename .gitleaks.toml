@@ -1,0 +1,6 @@
+[allowlist]
+description = "Ignore dependencies and lock configs"
+paths = [
+  '''package-lock\.json''',
+  '''node_modules'''
+]

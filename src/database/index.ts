@@ -2,7 +2,6 @@
 import mongoose from 'mongoose';
 
 export const connectDatabase = async (uri: string): Promise<void> => {
-  // readyState codes: 0 = disconnected, 1 = connected, 2 = connecting, 3 = disconnecting
   if (mongoose.connection.readyState === 1) {
     console.log('MongoDB is already connected (reusing active connection).');
     return;
@@ -15,13 +14,12 @@ export const connectDatabase = async (uri: string): Promise<void> => {
 
   try {
     await mongoose.connect(uri, {
-      autoIndex: true, // Enables automatic index building on startup (critical for our schemas)
+      autoIndex: true,
     });
     console.log('Successfully established MongoDB connection.');
   } catch (error) {
     console.error('Critical: Failed to connect to MongoDB:', error);
 
-    // In production, we crash the process immediately if the database is unreachable
     if (process.env.NODE_ENV === 'production') {
       process.exit(1);
     }

@@ -2,9 +2,12 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import { connectDatabase } from './database/index.js';
+import projectRoutes from './routes/projectRoutes.js';
 
 const app = express();
 app.use(express.json());
+
+app.use('/api', projectRoutes);
 
 app.get('/api/health', (req, res) => {
   const states = ['Disconnected', 'Connected', 'Connecting', 'Disconnecting'];

@@ -4,6 +4,7 @@ import { ProjectModel } from '../database/models/Project.js';
 import { generateId } from '../utils/idGenerator.js';
 import { FileModel } from '../database/models/File.js';
 import { JobModel } from '../database/models/Job.js';
+import fs from 'fs/promises';
 
 export const createProject = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -78,5 +79,51 @@ export const getProjectDetails = async (req: Request, res: Response): Promise<vo
   } catch (error) {
     console.error('Error inside getProjectDetails controller:', error);
     res.status(500).json({ error: 'Internal server error occurred while retrieving project.' });
+  }
+};
+
+export const deleteProject = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { projectId } = req.params;
+
+    //project exists or not
+    const project = await ProjectModel.findOne({ projectId });
+    if (!project) {
+      res.status(404).json({ error: 'Project not found' });
+      return;
+    }
+
+    //finding project files
+    const files = await FileModel.find({ projectId });
+
+    //deleting files
+    for (const file of files) {
+      try {
+        if (file.path) {
+          await fs.unlink(file.path);
+        }
+      } catch (unlinkError: unknown) {
+        const systemError = unlinkError as NodeJS.ErrnoException;
+
+        if (systemError.code !== 'ENOENT') {
+          console.warn(`Warning: Failed to delete physical file at ${file.path}:`, unlinkError);
+        }
+      }
+    }
+
+    //delete on db
+    await Promise.all([
+      ProjectModel.deleteOne({ projectId }),
+      FileModel.deleteMany({ projectId }),
+      JobModel.deleteMany({ projectId }),
+    ]);
+
+    //reponse
+    res.status(200).json({
+      message: 'Project and all associated files and jobs deleted',
+    });
+  } catch (error) {
+    console.error('Error inside deleteProject controller:', error);
+    res.status(500).json({ error: 'Internal server error occurred while deleting project.' });
   }
 };

@@ -98,3 +98,47 @@ export const listProjectFiles = async (req: Request, res: Response): Promise<voi
     res.status(500).json({ error: 'Internal server error occurred while retrieving files.' });
   }
 };
+
+export const deleteFile = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { projectId, fileId } = req.params;
+
+    //check project exists or not
+    const projectExists = await ProjectModel.exists({ projectId });
+    if (!projectExists) {
+      res.status(404).json({ error: 'Project not found' });
+      return;
+    }
+
+    //check file exists in that project
+    const file = await FileModel.findOne({ projectId, fileId });
+    if (!file) {
+      res.status(404).json({ error: 'File not found for this project' });
+      return;
+    }
+
+    //delete from uploads folder
+    try {
+      if (file.path) {
+        await fs.unlink(file.path);
+      }
+    } catch (unlinkError: unknown) {
+      const systemError = unlinkError as NodeJS.ErrnoException;
+
+      if (systemError.code !== 'ENOENT') {
+        console.warn(`Warning: Failed to delete physical file at ${file.path}:`, unlinkError);
+      }
+    }
+
+    //delete data from db
+    await FileModel.deleteOne({ projectId, fileId });
+
+    //response
+    res.status(200).json({
+      message: 'File deleted successfully',
+    });
+  } catch (error) {
+    console.error('Error inside deleteFile controller:', error);
+    res.status(500).json({ error: 'Internal server error occurred while deleting the file.' });
+  }
+};

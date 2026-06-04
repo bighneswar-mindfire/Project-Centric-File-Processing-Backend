@@ -127,3 +127,60 @@ export const deleteProject = async (req: Request, res: Response): Promise<void> 
     res.status(500).json({ error: 'Internal server error occurred while deleting project.' });
   }
 };
+
+// ... (keep your existing createProject, getProjectDetails, and deleteProject functions here) ...
+
+/**
+ * Update an existing project's details (name, description, or both)
+ * PUT /api/projects/:projectId
+ */
+export const updateProject = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { projectId } = req.params;
+    const { name, description } = req.body;
+
+    // 1. Build a dynamic update object so we only modify what the client actually sent
+    const updateData: { name?: string; description?: string } = {};
+
+    if (name !== undefined) {
+      if (typeof name !== 'string' || name.trim() === '') {
+        res.status(400).json({ error: 'Name must be a non-empty string.' });
+        return;
+      }
+      updateData.name = name.trim();
+    }
+
+    if (description !== undefined) {
+      if (typeof description !== 'string' || description.trim() === '') {
+        res.status(400).json({ error: 'Description must be a non-empty string.' });
+        return;
+      }
+      updateData.description = description.trim();
+    }
+
+    // 2. Validate that at least one valid field was sent for update
+    if (Object.keys(updateData).length === 0) {
+      res.status(400).json({ error: 'Please provide a name or description to update.' });
+      return;
+    }
+
+    const updatedProject = await ProjectModel.findOneAndUpdate(
+      { projectId },
+      { $set: updateData },
+      { new: true, runValidators: true },
+    );
+
+    //project missing
+    if (!updatedProject) {
+      res.status(404).json({ error: 'Project not found' });
+      return;
+    }
+
+    res.status(200).json({
+      message: 'Project updated successfully',
+    });
+  } catch (error) {
+    console.error('Error inside updateProject controller:', error);
+    res.status(500).json({ error: 'Internal server error occurred while updating project.' });
+  }
+};

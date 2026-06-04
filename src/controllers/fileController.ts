@@ -76,3 +76,25 @@ export const uploadFiles = async (req: Request, res: Response): Promise<void> =>
     res.status(500).json({ error: 'Internal server error occurred while uploading files.' });
   }
 };
+
+export const listProjectFiles = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { projectId } = req.params;
+
+    //check project exists or not
+    const projectExists = await ProjectModel.exists({ projectId });
+    if (!projectExists) {
+      res.status(404).json({ error: 'Project not found' });
+      return;
+    }
+
+    //fetch the files from db
+    const files = await FileModel.find({ projectId }).select('fileId name size -_id');
+
+    //response
+    res.status(200).json(files);
+  } catch (error) {
+    console.error('Error inside listProjectFiles controller:', error);
+    res.status(500).json({ error: 'Internal server error occurred while retrieving files.' });
+  }
+};

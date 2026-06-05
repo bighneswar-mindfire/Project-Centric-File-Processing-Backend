@@ -142,3 +142,46 @@ export const deleteFile = async (req: Request, res: Response): Promise<void> => 
     res.status(500).json({ error: 'Internal server error occurred while deleting the file.' });
   }
 };
+
+export const downloadFile = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { projectId, fileId } = req.params;
+
+    //check if project exists
+    const projectExists = await ProjectModel.exists({ projectId });
+    if (!projectExists) {
+      res.status(404).json({ error: 'Project not found' });
+      return;
+    }
+
+    // check if file is in this project
+    const file = await FileModel.findOne({ projectId, fileId });
+    if (!file) {
+      res.status(404).json({ error: 'File not found for this project' });
+      return;
+    }
+
+    //check if the physical file exists on disk
+    try {
+      await fs.access(file.path);
+    } catch {
+      res.status(404).json({ error: 'Physical file not found on disk' });
+      return;
+    }
+
+    //download
+    res.download(file.path, file.name, (err?: Error) => {
+      if (err) {
+        if (!res.headersSent) {
+          console.error('Error streaming file download:', err);
+          res.status(500).json({ error: 'Error downloading the file.' });
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error inside downloadFile controller:', error);
+    res
+      .status(500)
+      .json({ error: 'Internal server error occurred while preparing file download.' });
+  }
+};

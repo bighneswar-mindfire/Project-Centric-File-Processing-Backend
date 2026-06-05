@@ -128,12 +128,6 @@ export const deleteProject = async (req: Request, res: Response): Promise<void> 
   }
 };
 
-// ... (keep your existing createProject, getProjectDetails, and deleteProject functions here) ...
-
-/**
- * Update an existing project's details (name, description, or both)
- * PUT /api/projects/:projectId
- */
 export const updateProject = async (req: Request, res: Response): Promise<void> => {
   try {
     const { projectId } = req.params;

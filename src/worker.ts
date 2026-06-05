@@ -1,8 +1,8 @@
-/* eslint-disable no-console */
+/* eslint-disable no-console  */
 import { workerData } from 'node:worker_threads';
 import fs from 'node:fs';
 import path from 'node:path';
-import archiver from 'archiver';
+import * as archiver from 'archiver';
 import { connectDatabase } from './database/index.js';
 import { JobModel, JobStatus } from './database/models/Job.js';
 import { FileModel } from './database/models/File.js';
@@ -31,7 +31,14 @@ const runCompression = async () => {
 
   //write-stream on disk for zip
   const outputStream = fs.createWriteStream(outputZipPath);
-  const archive = archiver('zip', { zlib: { level: 9 } });
+
+  const archiverModule = archiver as any;
+
+  const archive = (
+    archiverModule.ZipArchive
+      ? new archiverModule.ZipArchive({ zlib: { level: 9 } })
+      : (archiverModule.default || archiverModule)('zip', { zlib: { level: 9 } })
+  ) as any;
 
   //close stream
   outputStream.on('close', async () => {
@@ -71,7 +78,7 @@ const runCompression = async () => {
   });
 
   //error check
-  archive.on('error', async (err) => {
+  archive.on('error', async (err: Error) => {
     console.error(`[Worker] Archiver error on Job ${jobId}:`, err);
     await JobModel.updateOne(
       { jobId },

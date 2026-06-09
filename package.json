@@ -19,6 +19,8 @@
   "devDependencies": {
     "@commitlint/cli": "^21.0.2",
     "@commitlint/config-conventional": "^21.0.2",
+    "@emnapi/core": "^1.11.0",
+    "@emnapi/runtime": "^1.11.0",
     "@types/archiver": "^7.0.0",
     "@types/express": "^5.0.6",
     "@types/multer": "^2.1.0",

@@ -23,6 +23,13 @@ beforeAll(async () => {
 
 afterAll(async () => {
   if (projectId) {
+    const files = await FileModel.find({ projectId });
+
+    //delete from upload folder
+    for (const file of files) {
+      await fs.unlink(file.path).catch(() => {});
+    }
+
     await ProjectModel.deleteOne({ projectId });
     await FileModel.deleteMany({ projectId });
   }

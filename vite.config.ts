@@ -1,5 +1,5 @@
-import { defineConfig } from "vite";
-import { VitePluginNode } from "vite-plugin-node";
+import { defineConfig } from 'vite';
+import { VitePluginNode } from 'vite-plugin-node';
 
 export default defineConfig({
   server: {
@@ -7,13 +7,13 @@ export default defineConfig({
   },
   plugins: [
     ...VitePluginNode({
-      adapter: "express",
-      appPath: "./src/index.ts",
-      exportName: "viteNodeApp",
-      tsCompiler: "vite",
+      adapter: 'express',
+      appPath: './src/index.ts',
+      exportName: 'viteNodeApp',
+      tsCompiler: 'vite',
     }),
   ],
   optimizeDeps: {
-    exclude: ["mongoose"],
+    exclude: ['mongoose'],
   },
 });

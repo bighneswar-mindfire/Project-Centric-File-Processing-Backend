@@ -133,7 +133,7 @@ export const updateProject = async (req: Request, res: Response): Promise<void> 
     const { projectId } = req.params;
     const { name, description } = req.body;
 
-    // 1. Build a dynamic update object so we only modify what the client actually sent
+    //sent data
     const updateData: { name?: string; description?: string } = {};
 
     if (name !== undefined) {
@@ -152,7 +152,7 @@ export const updateProject = async (req: Request, res: Response): Promise<void> 
       updateData.description = description.trim();
     }
 
-    // 2. Validate that at least one valid field was sent for update
+    //check if values are sent or not
     if (Object.keys(updateData).length === 0) {
       res.status(400).json({ error: 'Please provide a name or description to update.' });
       return;

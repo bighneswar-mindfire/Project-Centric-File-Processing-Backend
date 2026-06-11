@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext'; // Updated path
+import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/authService';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/card';
 import { Label } from '../components/ui/label';
@@ -22,7 +22,7 @@ export const Signup: React.FC = () => {
     e.preventDefault();
     setError(null);
 
-    // Form Validations
+    //validations
     if (!email.trim() || !password || !confirmPassword) {
       setError('Please fill in all fields.');
       return;
@@ -60,7 +60,7 @@ export const Signup: React.FC = () => {
             Create Account
           </CardTitle>
           <CardDescription className="text-slate-500">
-            Sign up using your email and password to get started
+            Sign up using your email and password
           </CardDescription>
         </CardHeader>
         <CardContent>

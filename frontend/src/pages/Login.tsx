@@ -48,9 +48,7 @@ export const Login: React.FC = () => {
           <CardTitle className="text-3xl font-bold tracking-tight text-slate-900">
             Sign in
           </CardTitle>
-          <CardDescription className="text-slate-500">
-            Access your project file processing workspace
-          </CardDescription>
+          <CardDescription className="text-slate-500">Enter credentials</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">

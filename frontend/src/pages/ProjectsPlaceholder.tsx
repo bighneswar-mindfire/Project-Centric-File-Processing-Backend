@@ -1,11 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/button';
+import { CreateProjectModal } from '../components/CreateProjectModal';
+import { ProjectResponse } from '../services/projectService';
 
 export const ProjectsPlaceholder: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleLogout = () => {
     //clearing token
@@ -13,6 +17,11 @@ export const ProjectsPlaceholder: React.FC = () => {
 
     //back to login page
     navigate('/login');
+  };
+
+  const handleProjectCreated = (newProject: ProjectResponse) => {
+    console.log('Project created successfully:', newProject);
+    alert('project created successfully with ID: ${newProject.id}');
   };
 
   return (
@@ -37,6 +46,17 @@ export const ProjectsPlaceholder: React.FC = () => {
           </Button>
         </div>
       </header>
+      <Button
+        onClick={() => setIsModalOpen(true)}
+        className="bg-slate-900 hover:bg-slate-800 h-9 px-3 text-xs w-auto text-white cursor-pointer"
+      >
+        Create Project
+      </Button>
+      <CreateProjectModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onProjectCreated={handleProjectCreated}
+      />
     </div>
   );
 };

@@ -178,3 +178,33 @@ export const updateProject = async (req: Request, res: Response): Promise<void> 
     res.status(500).json({ error: 'Internal server error occurred while updating project.' });
   }
 };
+
+export const listProjects = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const projects = await ProjectModel.find({}).sort({ createdAt: -1 });
+
+    //file count and jobs count fetching
+    const projectsWithStats = await Promise.all(
+      projects.map(async (project) => {
+        const [filesCount, jobsCount] = await Promise.all([
+          FileModel.countDocuments({ projectId: project.projectId }),
+          JobModel.countDocuments({ projectId: project.projectId }),
+        ]);
+
+        return {
+          id: project.projectId,
+          name: project.name,
+          description: project.description,
+          filesCount,
+          jobsCount,
+          createdAt: project.createdAt,
+        };
+      }),
+    );
+
+    res.status(200).json(projectsWithStats);
+  } catch (error) {
+    console.error('Error inside listProjects controller:', error);
+    res.status(500).json({ error: 'Internal server error occurred.' });
+  }
+};

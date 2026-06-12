@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from './context/AuthProvider';
 import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
+import { ProjectsPlaceholder } from './pages/ProjectsPlaceholder';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 function App() {
@@ -16,9 +17,7 @@ function App() {
             path="/projects"
             element={
               <ProtectedRoute>
-                <div className="min-h-screen flex items-center justify-center bg-slate-50">
-                  <h1 className="text-2xl font-bold text-slate-800">Hello World</h1>
-                </div>
+                <ProjectsPlaceholder />
               </ProtectedRoute>
             }
           />

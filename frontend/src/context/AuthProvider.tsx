@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { AuthContext, User } from './AuthContext.js';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // 1. Lazy State Initialization for Token
   const [token, setToken] = useState<string | null>(() => {
     try {
       return localStorage.getItem('token');
@@ -11,7 +10,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   });
 
-  // 2. Lazy State Initialization for User
   const [user, setUser] = useState<User | null>(() => {
     try {
       const storedUser = localStorage.getItem('user');
@@ -21,8 +19,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   });
 
-  // 3. Since values are loaded instantly before the first render,
-  // we do not need to wait for a mounting effect; isLoading can stay false.
   const [isLoading] = useState(false);
 
   const login = (newToken: string, newUser: User) => {

@@ -63,4 +63,22 @@ export const projectService = {
 
     return response.json();
   },
+
+  getProjectDetails: async (projectId: string): Promise<ProjectResponse> => {
+    const token = localStorage.getItem('token');
+
+    const response = await fetch(`${API_BASE_URL}/projects/${projectId}`, {
+      method: 'GET',
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to fetch project details.');
+    }
+
+    return response.json();
+  },
 };

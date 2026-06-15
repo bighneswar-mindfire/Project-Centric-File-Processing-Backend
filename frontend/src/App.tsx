@@ -4,6 +4,7 @@ import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
 import { ProjectsPlaceholder } from './pages/ProjectsPlaceholder';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { ProjectDetails } from './pages/ProjectDetails';
 
 function App() {
   return (
@@ -21,7 +22,14 @@ function App() {
               </ProtectedRoute>
             }
           />
-
+          <Route
+            path="/projects/:projectId"
+            element={
+              <ProtectedRoute>
+                <ProjectDetails />
+              </ProtectedRoute>
+            }
+          />
           <Route path="*" element={<Navigate to="/projects" replace />} />
         </Routes>
       </Router>

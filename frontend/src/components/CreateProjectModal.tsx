@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X } from 'lucide-react'; // Imports the "X" close icon
+import { X } from 'lucide-react';
 import { projectService, ProjectResponse } from '../services/projectService';
 import { Button } from './ui/button';
 import { Input } from './ui/input';

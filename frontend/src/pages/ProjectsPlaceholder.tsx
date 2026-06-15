@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FolderKanban } from 'lucide-react';
+import { FolderKanban, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
 import { Alert } from '../components/ui/Alert';
 import { CreateProjectModal } from '../components/CreateProjectModal';
 import { projectService, ProjectResponse } from '../services/projectService';
+import { DeleteConfirmationModal } from '../components/DeleteConfirmationModal';
 
 export const ProjectsPlaceholder: React.FC = () => {
   const { user, logout } = useAuth();
@@ -17,6 +18,9 @@ export const ProjectsPlaceholder: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [targetProject, setTargetProject] = useState<ProjectResponse | null>(null);
 
   //fetching projects
   const fetchProjects = async () => {
@@ -45,6 +49,24 @@ export const ProjectsPlaceholder: React.FC = () => {
   const handleProjectCreated = (newProject: ProjectResponse) => {
     //adding new project
     setProjects((prev) => [newProject, ...prev]);
+  };
+
+  const openDeleteModal = (project: ProjectResponse, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevents clicking the delete button from opening the project details page
+    setTargetProject(project);
+    setIsDeleteOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!targetProject) return;
+    try {
+      await projectService.deleteProject(targetProject.id);
+      // deleteds project from the list UI
+      setProjects((prev) => prev.filter((p) => p.id !== targetProject.id));
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Deletion failed.';
+      alert(errorMsg);
+    }
   };
 
   return (
@@ -125,6 +147,15 @@ export const ProjectsPlaceholder: React.FC = () => {
                         </CardTitle>
                         <span className="text-xs text-slate-400 font-mono">ID: {project.id}</span>
                       </div>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={(e) => openDeleteModal(project, e)}
+                          className="p-1.5 rounded-md hover:bg-red-50 text-red-500 transition-colors cursor-pointer"
+                          title="Delete Project"
+                        >
+                          <Trash2 className="h-4.5 w-4.5" />
+                        </button>
+                      </div>
                     </div>
                   </CardHeader>
 
@@ -156,6 +187,16 @@ export const ProjectsPlaceholder: React.FC = () => {
         isOpen={isCreateOpen}
         onClose={() => setIsCreateOpen(false)}
         onProjectCreated={handleProjectCreated}
+      />
+
+      <DeleteConfirmationModal
+        isOpen={isDeleteOpen}
+        projectName={targetProject?.name || ''}
+        onClose={() => {
+          setIsDeleteOpen(false);
+          setTargetProject(null);
+        }}
+        onConfirm={handleConfirmDelete}
       />
     </div>
   );

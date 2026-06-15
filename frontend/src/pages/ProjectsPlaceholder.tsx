@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FolderKanban } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
@@ -91,11 +92,21 @@ export const ProjectsPlaceholder: React.FC = () => {
             </div>
           )}
 
-          {/* error */}
+          {/* error state */}
           {error && !isLoading && (
             <Alert className="max-w-xl mx-auto">
               <span className="font-semibold">Failed to load projects:</span> {error}
             </Alert>
+          )}
+
+          {/*empty state */}
+          {projects.length === 0 && !isLoading && !error && (
+            <div className="text-center max-w-md mx-auto py-16 bg-white border border-slate-200 rounded-xl p-8 shadow-sm space-y-4">
+              <div className="p-3 bg-slate-100 rounded-full inline-flex text-slate-500">
+                <FolderKanban className="h-8 w-8" />
+              </div>
+              <h3 className="text-lg font-semibold text-slate-900">No Projects Found</h3>
+            </div>
           )}
 
           {projects.length > 0 && !isLoading && (

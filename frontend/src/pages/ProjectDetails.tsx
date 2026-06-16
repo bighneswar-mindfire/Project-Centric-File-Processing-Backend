@@ -44,18 +44,17 @@ export const ProjectDetails: React.FC = () => {
           fileService.getFiles(projectId),
         ]);
         setProject(projectData);
-        setFiles(filesList); 
+        setFiles(filesList);
       } catch (err: unknown) {
-        const errorMsg =
-          err instanceof Error ? err.message : 'Failed to retrieve project workspace details.';
+        const errorMsg = err instanceof Error ? err.message : 'Failed to retrieve project details.';
         setError(errorMsg);
       } finally {
         setIsLoading(false);
+      }
     };
 
     fetchWorkspaceData();
   }, [projectId]);
-
   const handleLogout = () => {
     logout();
     navigate('/login');
@@ -309,12 +308,12 @@ export const ProjectDetails: React.FC = () => {
                       )}
                     </div>
 
-                    {/* C. Active Uploaded Files List */}
+                    {/*uploaded files list */}
                     <div className="space-y-3 pt-2">
                       <h4 className="text-sm font-semibold text-slate-900">Uploaded Files</h4>
                       {files.length === 0 ? (
                         <p className="text-xs text-slate-400 italic">
-                          No files uploaded yet in this project workspace.
+                          No files uploaded in this project.
                         </p>
                       ) : (
                         <div className="border border-slate-200 rounded-lg divide-y divide-slate-100 bg-white max-h-72 overflow-y-auto">
@@ -340,7 +339,7 @@ export const ProjectDetails: React.FC = () => {
                               </div>
 
                               <div className="flex items-center space-x-2">
-                                {/* Delete Trigger (Download button has been removed) */}
+                                {/*delete*/}
                                 <button
                                   onClick={() => handleDeleteFile(file.fileId)}
                                   className="p-1.5 rounded-md hover:bg-red-50 text-red-500 cursor-pointer"
@@ -358,7 +357,7 @@ export const ProjectDetails: React.FC = () => {
                 </Card>
               </div>
 
-              {/* Right Workspace: Background Jobs Module (Takes up 1/3 column) */}
+              {/*jobs section*/}
               <div className="space-y-6">
                 <Card className="shadow-sm min-h-[400px]">
                   <CardHeader className="border-b border-slate-100">
@@ -367,10 +366,7 @@ export const ProjectDetails: React.FC = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-6">
-                    <p className="text-sm text-slate-500 italic">
-                      Background zipping run configurations, progress monitors, and polling queues
-                      will be implemented here next [1].
-                    </p>
+                    <p className="text-sm text-slate-500 italic"></p>
                   </CardContent>
                 </Card>
               </div>

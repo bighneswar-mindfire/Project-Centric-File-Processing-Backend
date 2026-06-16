@@ -158,3 +158,23 @@ export const getJobStatus = async (req: Request, res: Response): Promise<void> =
     res.status(500).json({ error: 'Internal server error occurred while retrieving job status.' });
   }
 };
+
+export const listJobs = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { projectId } = req.params;
+
+    //check project exists
+    const projectExists = await ProjectModel.exists({ projectId });
+    if (!projectExists) {
+      res.status(404).json({ error: 'Project not found' });
+      return;
+    }
+
+    //retrieve jobs
+    const jobs = await JobModel.find({ projectId }).sort({ createdAt: -1 });
+    res.status(200).json(jobs);
+  } catch (error) {
+    console.error('Error in listJobs controller:', error);
+    res.status(500).json({ error: 'Internal server error occurred.' });
+  }
+};

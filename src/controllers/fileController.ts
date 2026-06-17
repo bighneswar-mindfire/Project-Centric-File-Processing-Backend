@@ -89,7 +89,7 @@ export const listProjectFiles = async (req: Request, res: Response): Promise<voi
     }
 
     //fetch the files from db
-    const files = await FileModel.find({ projectId }).select('fileId name size -_id');
+    const files = await FileModel.find({ projectId }).select('fileId name size uploadedAt -_id');
 
     //response
     res.status(200).json(files);

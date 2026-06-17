@@ -345,10 +345,11 @@ export const ProjectDetails: React.FC = () => {
             </Card>
 
             {/* tow column layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
               {/* files list*/}
-              <div className="lg:col-span-2 space-y-6">
-                <Card className="shadow-sm">
+              <div className="lg:col-span-2 flex flex-col h-full">
+                {/* Fixed Height on Left Card */}
+                <Card className="shadow-sm flex flex-col h-[600px]">
                   <CardHeader className="border-b border-slate-100 flex flex-row items-center justify-between">
                     <CardTitle className="text-lg font-bold text-slate-900">Files</CardTitle>
                     {selectedFileIds.length > 0 && (
@@ -357,7 +358,7 @@ export const ProjectDetails: React.FC = () => {
                       </span>
                     )}
                   </CardHeader>
-                  <CardContent className="p-6 space-y-6">
+                  <CardContent className="p-6 space-y-6 flex-1 flex flex-col min-h-0">
                     {/* drag drop */}
                     <div
                       className={`grid grid-cols-1 ${selectedFiles.length > 0 ? 'md:grid-cols-2' : ''} gap-6 items-start`}
@@ -454,13 +455,13 @@ export const ProjectDetails: React.FC = () => {
                     </div>
 
                     {/* file list*/}
-                    <div className="space-y-3 pt-2">
+                    <div className="space-y-3 pt-2 flex-1 flex flex-col min-h-0">
                       <h4 className="text-sm font-semibold text-slate-900">Uploaded Files</h4>
                       {files.length === 0 ? (
                         <p className="text-xs text-slate-400 italic">No files uploaded.</p>
                       ) : (
-                        // scroll
-                        <ScrollArea className="h-72 border border-slate-200 rounded-lg bg-white">
+                        // scroll (Apply scroll with flex-1 min-h-0)
+                        <ScrollArea className="flex-1 min-h-0 border border-slate-200 rounded-lg bg-white">
                           <div className="divide-y divide-slate-100">
                             {files.map((file) => (
                               <div
@@ -509,9 +510,10 @@ export const ProjectDetails: React.FC = () => {
               </div>
 
               {/* jobs */}
-              <div className="space-y-6">
-                <Card className="shadow-sm flex flex-col justify-between min-h-[400px]">
-                  <div>
+              <div className="flex flex-col h-full">
+                {/* Fixed Height on Right Card matching Left Card */}
+                <Card className="shadow-sm flex flex-col justify-between h-[600px]">
+                  <div className="flex-1 flex flex-col min-h-0">
                     <CardHeader className="border-b border-slate-100 flex flex-col space-y-1">
                       <CardTitle className="text-lg font-bold text-slate-900">
                         Compression Jobs
@@ -519,13 +521,14 @@ export const ProjectDetails: React.FC = () => {
                     </CardHeader>
 
                     {/*jobs list*/}
-                    <CardContent className="p-4 space-y-3">
+                    <CardContent className="p-4 space-y-3 flex-1 flex flex-col min-h-0">
                       {jobs.length === 0 ? (
                         <p className="text-xs text-slate-400 italic py-8 text-center">
                           No zipping jobs.
                         </p>
                       ) : (
-                        <ScrollArea className="h-[300px] pr-3">
+                        // scroll (Apply scroll with flex-1 min-h-0 instead of hardcoded 300px)
+                        <ScrollArea className="flex-1 min-h-0 pr-3">
                           <div className="space-y-3">
                             {jobs.map((job) => (
                               <div

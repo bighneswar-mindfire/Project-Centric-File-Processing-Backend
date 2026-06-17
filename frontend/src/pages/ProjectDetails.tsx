@@ -563,7 +563,6 @@ export const ProjectDetails: React.FC = () => {
                                 )}
 
                                 <div className="text-[10px] text-slate-400 space-y-0.5">
-                                  <p>Created: {new Date(job.createdAt).toLocaleString()}</p>
                                   {job.completedAt && (
                                     <p>Finished: {new Date(job.completedAt).toLocaleString()}</p>
                                   )}

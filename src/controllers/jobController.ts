@@ -97,7 +97,7 @@ export const createZipJob = async (req: Request, res: Response): Promise<void> =
       projectId: job.projectId,
       type: job.type,
       status: job.status,
-      createdAt: job.createdAt,
+      createdAt: job.createdAt || new Date(),
     });
   } catch (error) {
     console.error('Error inside createZipJob controller:', error);

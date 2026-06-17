@@ -23,21 +23,22 @@ export const ProjectsPlaceholder: React.FC = () => {
   const [targetProject, setTargetProject] = useState<ProjectResponse | null>(null);
 
   //fetching projects
-  const fetchProjects = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const data = await projectService.getProjects();
-      setProjects(data);
-    } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to retrieve projects.';
-      setError(errorMsg);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   useEffect(() => {
+    const fetchProjects = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const data = await projectService.getProjects();
+        setProjects(data);
+      } catch (err: unknown) {
+        const errorMsg = err instanceof Error ? err.message : 'Failed to retrieve projects.';
+        setError(errorMsg);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     fetchProjects();
   }, []);
 
@@ -52,7 +53,7 @@ export const ProjectsPlaceholder: React.FC = () => {
   };
 
   const openDeleteModal = (project: ProjectResponse, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevents clicking the delete button from opening the project details page
+    e.stopPropagation(); //stops opening details page
     setTargetProject(project);
     setIsDeleteOpen(true);
   };
@@ -110,7 +111,7 @@ export const ProjectsPlaceholder: React.FC = () => {
           {isLoading && (
             <div className="flex flex-col items-center justify-center py-24 space-y-4">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900"></div>
-              <p className="text-sm text-slate-500">Retrieving projects...</p>
+              <p className="text-sm text-slate-500">Loading projects..</p>
             </div>
           )}
 
@@ -165,10 +166,11 @@ export const ProjectsPlaceholder: React.FC = () => {
                     <div className="flex items-center justify-between pt-4 border-t border-slate-100 text-xs text-slate-500">
                       <div className="flex items-center space-x-4">
                         <span title="Files count">
-                          File Count: <strong className="text-slate-700"></strong>
+                          File Count:{' '}
+                          <strong className="text-slate-700">{project.filesCount}</strong>
                         </span>
                         <span title="Jobs count">
-                          Job Count: <strong className="text-slate-700"></strong>
+                          Job Count: <strong className="text-slate-700">{project.jobsCount}</strong>
                         </span>
                       </div>
 

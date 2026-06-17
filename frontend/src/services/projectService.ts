@@ -3,6 +3,8 @@ const API_BASE_URL = '/api';
 export interface ProjectResponse {
   id: string;
   name: string;
+  filesCount: number;
+  jobsCount: number;
   description: string;
   createdAt: string;
 }

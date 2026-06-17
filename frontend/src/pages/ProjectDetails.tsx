@@ -136,6 +136,7 @@ export const ProjectDetails: React.FC = () => {
     setIsDragging(true);
   };
 
+  //drag drop
   const handleDragLeave = () => {
     setIsDragging(false);
   };
@@ -175,6 +176,14 @@ export const ProjectDetails: React.FC = () => {
       //update file list
       setFiles((prev) => [...prev, ...response.files]);
 
+      // Update files count dynamically in project header
+      if (project) {
+        setProject({
+          ...project,
+          filesCount: project.filesCount + response.files.length,
+        });
+      }
+
       //reset selection
       setSelectedFiles([]);
     } catch (err: unknown) {
@@ -193,6 +202,14 @@ export const ProjectDetails: React.FC = () => {
 
       //update file list
       setFiles((prev) => prev.filter((f) => f.fileId !== fileId));
+
+      // Decrement files count dynamically in project header
+      if (project) {
+        setProject({
+          ...project,
+          filesCount: Math.max(0, project.filesCount - 1),
+        });
+      }
     } catch (err: unknown) {
       const errorMsg = err instanceof Error ? err.message : 'Delete failed.';
       alert(errorMsg);
@@ -217,6 +234,14 @@ export const ProjectDetails: React.FC = () => {
 
       //add to job list
       setJobs((prev) => [newJob, ...prev]);
+
+      // Increment jobs count dynamically in project header
+      if (project) {
+        setProject({
+          ...project,
+          jobsCount: project.jobsCount + 1,
+        });
+      }
 
       //checkbox reser
       setSelectedFileIds([]);
@@ -273,7 +298,7 @@ export const ProjectDetails: React.FC = () => {
         {isLoading && (
           <div className="flex flex-col items-center justify-center py-32 space-y-4">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900"></div>
-            <p className="text-sm text-slate-500">Loading project workspace...</p>
+            <p className="text-sm text-slate-500">Loading project.</p>
           </div>
         )}
 
@@ -282,13 +307,13 @@ export const ProjectDetails: React.FC = () => {
           <Alert variant="destructive" className="max-w-xl mx-auto flex items-start space-x-3">
             <AlertCircle className="h-5 w-5 shrink-0" />
             <div>
-              <AlertTitle>Error Loading Workspace</AlertTitle>
+              <AlertTitle>Error Loading project</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </div>
           </Alert>
         )}
 
-        {/*workspace loaded */}
+        {/*project loaded */}
         {project && !isLoading && (
           <div className="space-y-6 animate-in fade-in duration-200">
             {/* project header */}
@@ -305,7 +330,15 @@ export const ProjectDetails: React.FC = () => {
                 <p className="text-sm text-slate-600 leading-relaxed">{project.description}</p>
 
                 {/*date*/}
-                <div className="flex items-center justify-end pt-4 border-t border-slate-100 text-xs text-slate-500">
+                <div className="flex items-center justify-between pt-4 border-t border-slate-100 text-xs text-slate-500">
+                  <div className="flex items-center space-x-4">
+                    <span>
+                      File Count: <strong className="text-slate-700">{project.filesCount}</strong>
+                    </span>
+                    <span>
+                      Job Count: <strong className="text-slate-700">{project.jobsCount}</strong>
+                    </span>
+                  </div>
                   <span>Created: {new Date(project.createdAt).toLocaleDateString()}</span>
                 </div>
               </CardContent>

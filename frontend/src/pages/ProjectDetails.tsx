@@ -8,7 +8,6 @@ import { projectService, ProjectResponse } from '../services/projectService';
 import { fileService, FileMetadata } from '../services/fileService';
 import { jobService, JobMetadata } from '../services/jobService';
 
-// Import our new cleanly modularized sub-components
 import { ProjectInfoCard } from '../components/ProjectInfoCard';
 import { FilesWorkspace } from '../components/FilesWorkspace';
 import { JobsWorkspace } from '../components/JobsWorkspace';

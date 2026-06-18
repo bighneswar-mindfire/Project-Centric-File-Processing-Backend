@@ -19,7 +19,7 @@ const renderWithProviders = (ui: React.ReactElement) => {
 };
 
 describe('Signup Component', () => {
-  it('should display an error if password confirmation mismatch occurs', async () => {
+  it('should display an error if password mismatch occurs', async () => {
     renderWithProviders(<Signup />);
 
     const emailInput = screen.getByLabelText(/email address/i);

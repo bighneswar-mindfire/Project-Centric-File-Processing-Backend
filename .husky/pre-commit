@@ -1,11 +1,1 @@
-
-npx lint-staged
-
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
-
-# 1. Navigate and lint backend
-cd backend && npm run lint
-
-# 2. Navigate and lint frontend
-cd ../frontend && npm run lint
+cd backend && npx lint-staged

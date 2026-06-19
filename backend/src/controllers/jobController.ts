@@ -14,7 +14,7 @@ const __dirname = path.dirname(__filename);
 //worker node
 const isProd = process.env.NODE_ENV === 'production';
 const workerPath = isProd
-  ? path.resolve(__dirname, './worker.js')
+  ? path.resolve(__dirname, '../worker.js')
   : path.resolve(__dirname, '../worker.ts');
 
 export const createZipJob = async (req: Request, res: Response): Promise<void> => {

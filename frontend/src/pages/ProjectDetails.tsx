@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, AlertCircle } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import { Button } from '../components/ui/button';
+
 import { Alert, AlertTitle, AlertDescription } from '../components/ui/Alert';
 import { projectService, ProjectResponse } from '../services/projectService';
 import { fileService, FileMetadata } from '../services/fileService';
@@ -11,10 +10,10 @@ import { jobService, JobMetadata } from '../services/jobService';
 import { ProjectInfoCard } from '../components/ProjectInfoCard';
 import { FilesWorkspace } from '../components/FilesWorkspace';
 import { JobsWorkspace } from '../components/JobsWorkspace';
+import { Header } from '../components/Header';
 
 export const ProjectDetails: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
-  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   //states
@@ -95,16 +94,11 @@ export const ProjectDetails: React.FC = () => {
         // eslint-disable-next-line no-console
         console.error('Error polling background job status:', err);
       }
-    }, 1500); // Poll every 1.5 seconds
+    }, 1500);
 
     // cleanup
     return () => clearInterval(intervalId);
   }, [jobs, projectId]);
-
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
 
   const toggleFileSelectionForZip = (fileId: string) => {
     setSelectedFileIds((prev) =>
@@ -115,26 +109,7 @@ export const ProjectDetails: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       {/*header*/}
-      <header className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm">
-        <div className="flex items-center space-x-2">
-          <span className="text-xl font-bold tracking-tight text-slate-900">
-            Project-Centric File Processing System
-          </span>
-        </div>
-
-        <div className="flex items-center space-x-4">
-          <span className="text-sm text-slate-500">
-            Logged in as: <strong className="text-slate-800">{user?.email}</strong>
-          </span>
-
-          <Button
-            onClick={handleLogout}
-            className="bg-red-600 hover:bg-red-700 h-9 px-3 text-xs w-auto text-white cursor-pointer"
-          >
-            Log Out
-          </Button>
-        </div>
-      </header>
+      <Header />
 
       {/*body */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-6 space-y-6 flex flex-col">

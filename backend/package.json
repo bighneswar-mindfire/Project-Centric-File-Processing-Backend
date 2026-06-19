@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
-    "start": "cross-env NODE_ENV=production node dist/index.js",
+    "build": "tsc",
+    "start": "cross-env NODE_ENV=production node dist/src/index.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"src/**/*.ts\"",

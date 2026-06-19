@@ -49,7 +49,12 @@ export const ProjectsPlaceholder: React.FC = () => {
 
   const handleProjectCreated = (newProject: ProjectResponse) => {
     //adding new project
-    setProjects((prev) => [newProject, ...prev]);
+    const projectWithDefaults: ProjectResponse = {
+      ...newProject,
+      filesCount: 0,
+      jobsCount: 0,
+    };
+    setProjects((prev) => [projectWithDefaults, ...prev]);
   };
 
   const openDeleteModal = (project: ProjectResponse, e: React.MouseEvent) => {

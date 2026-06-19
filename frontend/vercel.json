@@ -3,7 +3,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://azazaz.com/api/$1"
+      "destination": "https://project-centric-file-processing-backend-2.onrender.com/api/$1"
     },
     {
       "source": "/(.*)",

@@ -26,6 +26,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('token', newToken);
       localStorage.setItem('user', JSON.stringify(newUser));
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error('Failed to save auth state:', err);
     }
     setToken(newToken);
@@ -37,6 +38,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.removeItem('token');
       localStorage.removeItem('user');
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error('Failed to clear auth state:', err);
     }
     setToken(null);

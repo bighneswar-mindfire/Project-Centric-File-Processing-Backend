@@ -1,13 +1,15 @@
 {
-  "cleanUrls": true,
-  "rewrites": [
+  "routes": [
     {
-      "source": "/api/(.*)",
-      "destination": "https://project-centric-file-processing-backend-2.onrender.com/api/$1"
+      "src": "/api/(.*)",
+      "dest": "https://project-centric-file-processing-backend-2.onrender.com/api/$1"
     },
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
 }

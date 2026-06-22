@@ -1,0 +1,46 @@
+version: "3.8"
+
+services:
+  #database Service
+  mongodb:
+    image: mongo:8.0
+    container_name: file-processor-db
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+  #backend API service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: file-processor-backend
+    restart: always
+    depends_on:
+      - mongodb
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      #connects to mongodb
+      - MONGO_URI=mongodb://mongodb:27017/project_centric_file_processor
+    volumes:
+      - backend_uploads:/app/uploads
+
+  # frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: file-processor-frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+#volumes
+volumes:
+  mongodb_data:
+  backend_uploads:

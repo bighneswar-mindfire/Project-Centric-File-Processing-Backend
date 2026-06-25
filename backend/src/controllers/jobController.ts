@@ -29,13 +29,11 @@ export const createZipJob = async (req: Request, res: Response): Promise<void> =
       return;
     }
 
-    // check file exists in project
     if (!fileIds || !Array.isArray(fileIds) || fileIds.length === 0) {
       res.status(400).json({ error: 'Please provide an array of fileIds to compress.' });
       return;
     }
 
-    //check if files exist in the same project
     const matchingFiles = await FileModel.find({
       projectId,
       fileId: { $in: fileIds },
@@ -46,12 +44,10 @@ export const createZipJob = async (req: Request, res: Response): Promise<void> =
       return;
     }
 
-    //job id generation
     const jobId = generateId('job');
     const outputFileId = generateId('file');
     const outputZipPath = `uploads/${projectId}_files_${Date.now()}.zip`;
 
-    //set job status:processing
     const job = new JobModel({
       jobId,
       projectId,
@@ -62,15 +58,12 @@ export const createZipJob = async (req: Request, res: Response): Promise<void> =
     });
     await job.save();
 
-    //path and  file name
     const filePaths = matchingFiles.map((file) => ({
       name: file.name,
       path: file.path,
     }));
 
-    //worker thread
-    const MONGO_URI =
-      process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/project_centric_file_processor';
+    const MONGO_URI = process.env.MONGO_URI;
 
     const worker = new Worker(workerPath, {
       workerData: {
@@ -111,21 +104,17 @@ export const getJobStatus = async (req: Request, res: Response): Promise<void> =
   try {
     const { projectId, jobId } = req.params;
 
-    //check if project exists
     const projectExists = await ProjectModel.exists({ projectId });
     if (!projectExists) {
       res.status(404).json({ error: 'Project not found' });
       return;
     }
 
-    //check if job belongs to the specified project
     const job = await JobModel.findOne({ projectId, jobId });
     if (!job) {
       res.status(404).json({ error: 'Job not found for this project' });
       return;
     }
-
-    //job status
     if (job.status === JobStatus.COMPLETED) {
       res.status(200).json({
         jobId: job.jobId,
@@ -163,14 +152,12 @@ export const listJobs = async (req: Request, res: Response): Promise<void> => {
   try {
     const { projectId } = req.params;
 
-    //check project exists
     const projectExists = await ProjectModel.exists({ projectId });
     if (!projectExists) {
       res.status(404).json({ error: 'Project not found' });
       return;
     }
 
-    //retrieve jobs
     const jobs = await JobModel.find({ projectId }).sort({ createdAt: -1 });
     res.status(200).json(jobs);
   } catch (error) {

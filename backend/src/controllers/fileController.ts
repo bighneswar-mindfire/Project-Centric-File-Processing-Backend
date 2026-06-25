@@ -9,11 +9,9 @@ export const uploadFiles = async (req: Request, res: Response): Promise<void> =>
   try {
     const { projectId } = req.params;
 
-    //check project exist or not
     const projectExists = await ProjectModel.exists({ projectId });
 
     if (!projectExists) {
-      //if project doesnot exist then delete the file
       if (req.files && Array.isArray(req.files)) {
         for (const file of req.files) {
           await fs
@@ -27,7 +25,6 @@ export const uploadFiles = async (req: Request, res: Response): Promise<void> =>
       return;
     }
 
-    //check file upload
     if (!req.files || (Array.isArray(req.files) && req.files.length === 0)) {
       res.status(400).json({ error: 'No files uploaded.' });
       return;
@@ -36,7 +33,6 @@ export const uploadFiles = async (req: Request, res: Response): Promise<void> =>
     const uploadedFiles = req.files as Express.Multer.File[];
     const savedFilesMetadata = [];
 
-    //save filedata in db
     for (const file of uploadedFiles) {
       let fileId = generateId('file');
       let idExists = await FileModel.exists({ fileId });
@@ -81,14 +77,12 @@ export const listProjectFiles = async (req: Request, res: Response): Promise<voi
   try {
     const { projectId } = req.params;
 
-    //check project exists or not
     const projectExists = await ProjectModel.exists({ projectId });
     if (!projectExists) {
       res.status(404).json({ error: 'Project not found' });
       return;
     }
 
-    //fetch the files from db
     const files = await FileModel.find({ projectId }).select('fileId name size uploadedAt -_id');
 
     //response
@@ -110,7 +104,6 @@ export const deleteFile = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
-    //check file exists in that project
     const file = await FileModel.findOne({ projectId, fileId });
     if (!file) {
       res.status(404).json({ error: 'File not found for this project' });
@@ -130,7 +123,7 @@ export const deleteFile = async (req: Request, res: Response): Promise<void> => 
       }
     }
 
-    //delete data from db
+    //delete from db
     await FileModel.deleteOne({ projectId, fileId });
 
     //response
@@ -147,14 +140,12 @@ export const downloadFile = async (req: Request, res: Response): Promise<void> =
   try {
     const { projectId, fileId } = req.params;
 
-    //check if project exists
     const projectExists = await ProjectModel.exists({ projectId });
     if (!projectExists) {
       res.status(404).json({ error: 'Project not found' });
       return;
     }
 
-    // check if file is in this project
     const file = await FileModel.findOne({ projectId, fileId });
     if (!file) {
       res.status(404).json({ error: 'File not found for this project' });
@@ -169,7 +160,6 @@ export const downloadFile = async (req: Request, res: Response): Promise<void> =
       return;
     }
 
-    //download
     res.download(file.path, file.name, (err?: Error) => {
       if (err) {
         if (!res.headersSent) {

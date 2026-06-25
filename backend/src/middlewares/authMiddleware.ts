@@ -25,7 +25,6 @@ export const authenticateToken = async (
       return;
     }
 
-    //verify token
     const { payload } = await jwtVerify(token, JWT_SECRET);
 
     const email = payload.email as string;
@@ -34,7 +33,6 @@ export const authenticateToken = async (
       return;
     }
 
-    //verify the user exists in database
     const userExists = await UserModel.exists({ email });
     if (!userExists) {
       res.status(401).json({ error: 'Access denied. User no longer exists.' });

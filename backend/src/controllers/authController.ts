@@ -19,14 +19,12 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    //check if user exists
     const userExists = await UserModel.exists({ email });
     if (userExists) {
       res.status(400).json({ error: 'User with this email already exists.' });
       return;
     }
 
-    //salt and hash the password
     const salt = crypto.randomBytes(16).toString('hex');
     const passwordHash = hashPassword(password, salt);
 
@@ -38,7 +36,6 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
 
     await newUser.save();
 
-    //generate JWT
     const token = await new SignJWT({ email: newUser.email })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
@@ -57,7 +54,6 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-// login
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
@@ -79,7 +75,6 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    //generate signed jwt
     const token = await new SignJWT({ email: user.email })
       .setProtectedHeader({ alg: 'HS256' })
       .setExpirationTime('8h')

@@ -28,23 +28,19 @@ export const JobsWorkspace: React.FC<JobsWorkspaceProps> = ({
 }) => {
   const [isCreatingJob, setIsCreatingJob] = useState(false);
 
-  //createing zip job logic
   const handleCreateZipJob = async () => {
     if (!projectId || selectedFileIds.length === 0) return;
 
     setIsCreatingJob(true);
     try {
-      //compression starts
       const newJob = await jobService.createZipJob(projectId, selectedFileIds);
 
-      //add to job list
       const jobWithDate: JobMetadata = {
         ...newJob,
         createdAt: newJob.createdAt || new Date().toISOString(),
       };
       setJobs((prev) => [jobWithDate, ...prev]);
 
-      //jobs count increase
       if (project) {
         setProject({
           ...project,
@@ -65,7 +61,12 @@ export const JobsWorkspace: React.FC<JobsWorkspaceProps> = ({
   //download zip
   const handleDownloadZip = (outputFileId: string) => {
     if (!projectId) return;
-    window.open(`/api/projects/${projectId}/files/${outputFileId}/download`, '_blank');
+    const token = localStorage.getItem('token');
+
+    window.open(
+      `/api/projects/${projectId}/files/${outputFileId}/download?token=${token}`,
+      '_blank',
+    );
   };
 
   return (

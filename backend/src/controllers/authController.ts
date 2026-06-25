@@ -1,11 +1,13 @@
 /* eslint-disable no-console */
 import { Request, Response } from 'express';
 import crypto from 'node:crypto';
+import { SignJWT } from 'jose';
 import { UserModel } from '../database/models/User.js';
 
-//hash password
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
+
 const hashPassword = (password: string, salt: string): string => {
-  return crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
+  return crypto.pbkdf2Sync(password, salt, 210000, 64, 'sha512').toString('hex');
 };
 
 export const signup = async (req: Request, res: Response): Promise<void> => {
@@ -36,9 +38,12 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
 
     await newUser.save();
 
-    //session token
-    const token =
-      crypto.randomUUID() + '.' + Buffer.from(JSON.stringify({ email })).toString('base64');
+    //generate JWT
+    const token = await new SignJWT({ email: newUser.email })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setIssuedAt()
+      .setExpirationTime('8h')
+      .sign(JWT_SECRET);
 
     res.status(201).json({
       token,
@@ -52,6 +57,7 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+// login
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
@@ -67,16 +73,17 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    //verify password hash
     const targetHash = hashPassword(password, user.salt);
     if (user.passwordHash !== targetHash) {
       res.status(400).json({ error: 'Invalid email or password.' });
       return;
     }
 
-    //session token
-    const token =
-      crypto.randomUUID() + '.' + Buffer.from(JSON.stringify({ email })).toString('base64');
+    //generate signed jwt
+    const token = await new SignJWT({ email: user.email })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setExpirationTime('8h')
+      .sign(JWT_SECRET);
 
     res.status(200).json({
       token,

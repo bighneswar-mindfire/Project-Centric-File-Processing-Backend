@@ -1,7 +1,15 @@
-/* eslint-disable no-console */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Request, Response, NextFunction } from 'express';
+import { jwtVerify } from 'jose';
 import { UserModel } from '../database/models/User.js';
+
+const JWT_SECRET_STRING = process.env.JWT_SECRET;
+const JWT_SECRET = new TextEncoder().encode(JWT_SECRET_STRING);
+
+export interface AuthenticatedRequest extends Request {
+  user?: {
+    email: string;
+  };
+}
 
 export const authenticateToken = async (
   req: Request,
@@ -9,10 +17,7 @@ export const authenticateToken = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    //retrieve the authorization header sent by the client
     const authHeader = req.headers['authorization'];
-
-    //extract the token
     const token = authHeader && authHeader.split(' ')[1];
 
     if (!token) {
@@ -20,35 +25,29 @@ export const authenticateToken = async (
       return;
     }
 
-    //verify the token structure
-    const [uuid, base64Payload] = token.split('.');
-    if (!uuid || !base64Payload) {
-      res.status(401).json({ error: 'Access denied. Invalid token structure.' });
-      return;
-    }
+    //verify token
+    const { payload } = await jwtVerify(token, JWT_SECRET);
 
-    //decode
-    const decodedJson = Buffer.from(base64Payload, 'base64').toString('utf8');
-    const payload = JSON.parse(decodedJson);
-
-    if (!payload || !payload.email) {
+    const email = payload.email as string;
+    if (!email) {
       res.status(401).json({ error: 'Access denied. Invalid token payload.' });
       return;
     }
 
-    //verify that the user still exists in our database
-    const userExists = await UserModel.exists({ email: payload.email });
+    //verify the user exists in database
+    const userExists = await UserModel.exists({ email });
     if (!userExists) {
       res.status(401).json({ error: 'Access denied. User no longer exists.' });
       return;
     }
 
-    //attach the validated user details to the request object for controller use
-    (req as any).user = { email: payload.email };
+    //for adding user details
+    const authReq = req as AuthenticatedRequest;
+    authReq.user = { email };
 
     next();
-  } catch (error) {
-    console.error('[Auth Middleware] Token validation failed:', error);
-    res.status(401).json({ error: 'Access denied. Token is invalid or expired.' });
+  } catch {
+    // token expired
+    res.status(401).json({ error: 'Access denied. Token has expired or is invalid.' });
   }
 };

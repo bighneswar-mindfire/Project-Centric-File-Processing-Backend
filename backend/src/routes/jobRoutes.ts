@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createZipJob, getJobStatus, listJobs } from '../controllers/jobController.js';
+import { createZipJob, getJobStatus, listProjectJobs } from '../controllers/jobController.js';
 import { authenticateToken } from '../middlewares/authMiddleware.js';
 
 const router = Router();
@@ -10,6 +10,6 @@ router.post('/projects/:projectId/jobs/zip', createZipJob);
 
 router.get('/projects/:projectId/jobs/:jobId', getJobStatus);
 
-router.get('/projects/:projectId/jobs', listJobs);
+router.get('/projects/:projectId/jobs', listProjectJobs);
 
 export default router;

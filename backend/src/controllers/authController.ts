@@ -1,14 +1,5 @@
-/* eslint-disable no-console */
 import { Request, Response } from 'express';
-import crypto from 'node:crypto';
-import { SignJWT } from 'jose';
-import { UserModel } from '../database/models/User.js';
-
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
-
-const hashPassword = (password: string, salt: string): string => {
-  return crypto.pbkdf2Sync(password, salt, 210000, 64, 'sha512').toString('hex');
-};
+import { authService } from '../services/authService.js'; // Import service layer
 
 export const signup = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -19,37 +10,17 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const userExists = await UserModel.exists({ email });
-    if (userExists) {
-      res.status(400).json({ error: 'User with this email already exists.' });
+    const result = await authService.registerUser(email, password);
+
+    res.status(201).json(result);
+  } catch (error: unknown) {
+    const err = error as Error;
+
+    if (err.message.includes('already exists')) {
+      res.status(400).json({ error: err.message });
       return;
     }
 
-    const salt = crypto.randomBytes(16).toString('hex');
-    const passwordHash = hashPassword(password, salt);
-
-    const newUser = new UserModel({
-      email,
-      passwordHash,
-      salt,
-    });
-
-    await newUser.save();
-
-    const token = await new SignJWT({ email: newUser.email })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setIssuedAt()
-      .setExpirationTime('8h')
-      .sign(JWT_SECRET);
-
-    res.status(201).json({
-      token,
-      user: {
-        email: newUser.email,
-      },
-    });
-  } catch (error) {
-    console.error('Error inside signup controller:', error);
     res.status(500).json({ error: 'Internal server error occurred during signup.' });
   }
 };
@@ -63,31 +34,17 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const user = await UserModel.findOne({ email });
-    if (!user) {
-      res.status(400).json({ error: 'Invalid email or password.' });
+    const result = await authService.authenticateUser(email, password);
+
+    res.status(200).json(result);
+  } catch (error: unknown) {
+    const err = error as Error;
+
+    if (err.message.includes('Invalid')) {
+      res.status(400).json({ error: err.message });
       return;
     }
 
-    const targetHash = hashPassword(password, user.salt);
-    if (user.passwordHash !== targetHash) {
-      res.status(400).json({ error: 'Invalid email or password.' });
-      return;
-    }
-
-    const token = await new SignJWT({ email: user.email })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setExpirationTime('8h')
-      .sign(JWT_SECRET);
-
-    res.status(200).json({
-      token,
-      user: {
-        email: user.email,
-      },
-    });
-  } catch (error) {
-    console.error('Error inside login controller:', error);
     res.status(500).json({ error: 'Internal server error occurred during login.' });
   }
 };

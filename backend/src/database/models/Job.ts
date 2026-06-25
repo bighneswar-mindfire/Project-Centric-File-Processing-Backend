@@ -46,4 +46,6 @@ const JobSchema = new Schema<IJob>(
   },
 );
 
+JobSchema.index({ projectId: 1, createdAt: -1 });
+
 export const JobModel = model<IJob>('Job', JobSchema);

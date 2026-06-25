@@ -1,7 +1,10 @@
 import { Router } from 'express';
 import { createZipJob, getJobStatus, listJobs } from '../controllers/jobController.js';
+import { authenticateToken } from '../middlewares/authMiddleware.js';
 
 const router = Router();
+
+router.use(authenticateToken);
 
 router.post('/projects/:projectId/jobs/zip', createZipJob);
 

@@ -11,13 +11,13 @@ import authRoutes from './routes/authRoutes.js';
 const app = express();
 app.use(express.json());
 
+app.use('/api', authRoutes);
+
 app.use('/api', projectRoutes);
 
 app.use('/api', fileRoutes);
 
 app.use('/api', jobRoutes);
-
-app.use('/api', authRoutes);
 
 app.get('/api/health', (req, res) => {
   const states = ['Disconnected', 'Connected', 'Connecting', 'Disconnecting'];

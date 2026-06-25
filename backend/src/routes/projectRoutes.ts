@@ -2,8 +2,11 @@ import { Router } from 'express';
 import { createProject } from '../controllers/projectController.js';
 import { getProjectDetails } from '../controllers/projectController.js';
 import { deleteProject, updateProject, listProjects } from '../controllers/projectController.js';
+import { authenticateToken } from '../middlewares/authMiddleware.js';
 
 const router = Router();
+
+router.use(authenticateToken);
 
 router.post('/projects', createProject);
 

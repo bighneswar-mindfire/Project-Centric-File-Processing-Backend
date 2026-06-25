@@ -18,7 +18,7 @@ export const ProjectDetails: React.FC = () => {
 
   //states
   const [project, setProject] = useState<ProjectResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(true); // Start as true to prevent mount-time setStates
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [files, setFiles] = useState<FileMetadata[]>([]);

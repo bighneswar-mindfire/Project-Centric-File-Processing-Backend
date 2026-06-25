@@ -8,8 +8,11 @@ import fileRoutes from './routes/fileRoutes.js';
 import jobRoutes from './routes/jobRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import cors from 'cors';
+import helmet from 'helmet';
 
 const app = express();
+
+app.use(helmet());
 app.use(express.json());
 
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || 'http://localhost:5173';

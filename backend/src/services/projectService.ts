@@ -50,25 +50,7 @@ export const projectService = {
   },
 
   listProjects: async () => {
-    const projects = await projectRepository.findAll();
-
-    return await Promise.all(
-      projects.map(async (project) => {
-        const [filesCount, jobsCount] = await Promise.all([
-          fileRepository.count(project.projectId),
-          jobRepository.count(project.projectId),
-        ]);
-
-        return {
-          id: project.projectId,
-          name: project.name,
-          description: project.description,
-          filesCount,
-          jobsCount,
-          createdAt: project.createdAt,
-        };
-      }),
-    );
+    return projectRepository.findAllWithStats();
   },
 
   updateProject: async (projectId: string, updateData: { name?: string; description?: string }) => {

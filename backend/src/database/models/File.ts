@@ -3,6 +3,7 @@ import { Schema, model, Document } from 'mongoose';
 export interface IFile extends Document {
   fileId: string;
   projectId: string;
+  deletedAt?: Date | null;
   name: string;
   size: number;
   type: string;
@@ -18,6 +19,7 @@ const FileSchema = new Schema<IFile>(
     size: { type: Number, required: true },
     type: { type: String, required: true },
     path: { type: String, required: true },
+    deletedAt: { type: Date, default: null },
   },
   {
     timestamps: { createdAt: 'uploadedAt', updatedAt: false },

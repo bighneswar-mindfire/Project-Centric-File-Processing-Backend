@@ -16,12 +16,12 @@ export const projectRepository = {
   },
 
   exists: async (projectId: string): Promise<boolean> => {
-    const exists = await ProjectModel.exists({ projectId });
+    const exists = await ProjectModel.exists({ projectId, deletedAt: null });
     return !!exists;
   },
 
   findOne: async (projectId: string): Promise<IProject | null> => {
-    return ProjectModel.findOne({ projectId });
+    return ProjectModel.findOne({ projectId, deletedAt: null });
   },
 
   findOneAndUpdate: async (
@@ -29,29 +29,42 @@ export const projectRepository = {
     updateData: Partial<IProject>,
   ): Promise<IProject | null> => {
     return ProjectModel.findOneAndUpdate(
-      { projectId },
+      { projectId, deletedAt: null },
       { $set: updateData },
       { new: true, runValidators: true },
     );
   },
 
-  deleteOne: async (projectId: string) => {
-    return ProjectModel.deleteOne({ projectId });
+  softDelete: async (projectId: string) => {
+    return ProjectModel.updateOne(
+      { projectId, deletedAt: null },
+      { $set: { deletedAt: new Date() } },
+    );
   },
 
   findAll: async (): Promise<IProject[]> => {
-    return ProjectModel.find({}).sort({ createdAt: -1 });
+    return ProjectModel.find({ deletedAt: null }).sort({ createdAt: -1 });
   },
 
   findAllWithStats: async (): Promise<ProjectWithStats[]> => {
     return ProjectModel.aggregate<ProjectWithStats>([
+      { $match: { deletedAt: null } },
+
       { $sort: { createdAt: -1 } },
 
       {
         $lookup: {
           from: 'files',
-          localField: 'projectId',
-          foreignField: 'projectId',
+          let: { projId: '$projectId' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [{ $eq: ['$projectId', '$$projId'] }, { $eq: ['$deletedAt', null] }],
+                },
+              },
+            },
+          ],
           as: 'files',
         },
       },
@@ -59,8 +72,16 @@ export const projectRepository = {
       {
         $lookup: {
           from: 'jobs',
-          localField: 'projectId',
-          foreignField: 'projectId',
+          let: { projId: '$projectId' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [{ $eq: ['$projectId', '$$projId'] }, { $eq: ['$deletedAt', null] }],
+                },
+              },
+            },
+          ],
           as: 'jobs',
         },
       },

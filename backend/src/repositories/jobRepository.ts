@@ -7,18 +7,18 @@ export const jobRepository = {
   },
 
   findOne: async (projectId: string, jobId: string): Promise<IJob | null> => {
-    return JobModel.findOne({ projectId, jobId });
+    return JobModel.findOne({ projectId, jobId, deletedAt: null });
   },
 
   findManyByProjectId: async (projectId: string): Promise<IJob[]> => {
-    return JobModel.find({ projectId }).sort({ createdAt: -1 });
+    return JobModel.find({ projectId, deletedAt: null }).sort({ createdAt: -1 });
   },
 
   count: async (projectId: string): Promise<number> => {
-    return JobModel.countDocuments({ projectId });
+    return JobModel.countDocuments({ projectId, deletedAt: null });
   },
 
-  deleteMany: async (projectId: string) => {
-    return JobModel.deleteMany({ projectId });
+  softDeleteMany: async (projectId: string) => {
+    return JobModel.updateMany({ projectId, deletedAt: null }, { $set: { deletedAt: new Date() } });
   },
 };

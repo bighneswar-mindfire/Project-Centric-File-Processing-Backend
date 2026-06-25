@@ -1,4 +1,3 @@
-import fs from 'fs/promises';
 import { projectRepository } from '../repositories/projectRepository.js';
 import { fileRepository } from '../repositories/fileRepository.js';
 import { jobRepository } from '../repositories/jobRepository.js';
@@ -62,32 +61,19 @@ export const projectService = {
   },
 
   deleteProject: async (projectId: string) => {
-    const project = await projectRepository.findOne(projectId);
-    if (!project) {
+    const projectExists = await projectRepository.exists(projectId);
+    if (!projectExists) {
       throw new Error('Project not found');
     }
 
-    const files = await fileRepository.findManyByQuery({ projectId });
-    for (const file of files) {
-      try {
-        if (file.path) {
-          await fs.unlink(file.path);
-        }
-      } catch (unlinkError: unknown) {
-        const systemError = unlinkError as NodeJS.ErrnoException;
-        if (systemError.code !== 'ENOENT') {
-          // eslint-disable-next-line no-console
-          console.warn(`Warning: Failed to delete file at ${file.path}:`, unlinkError);
-        }
-      }
-    }
-
     await Promise.all([
-      projectRepository.deleteOne(projectId),
-      fileRepository.deleteMany(projectId),
-      jobRepository.deleteMany(projectId),
+      projectRepository.softDelete(projectId),
+      fileRepository.softDeleteMany(projectId),
+      jobRepository.softDeleteMany(projectId),
     ]);
 
-    return { message: 'Project and all associated files and jobs deleted' };
+    return {
+      message: 'Projectand its files and jobs are deleted',
+    };
   },
 };

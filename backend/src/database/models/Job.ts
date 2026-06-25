@@ -17,6 +17,7 @@ export interface IJob extends Document {
   outputFileId?: string;
   error?: string;
   startedAt?: Date;
+  deletedAt?: Date | null;
   completedAt?: Date;
   createdAt: Date;
 }
@@ -38,6 +39,7 @@ const JobSchema = new Schema<IJob>(
     error: { type: String },
     startedAt: { type: Date },
     completedAt: { type: Date },
+    deletedAt: { type: Date, default: null },
   },
   {
     timestamps: { createdAt: 'createdAt', updatedAt: true },

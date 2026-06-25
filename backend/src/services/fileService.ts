@@ -73,24 +73,12 @@ export const fileService = {
       throw new Error('Project not found');
     }
 
-    const file = await fileRepository.findOne(projectId, fileId);
-    if (!file) {
+    const fileExists = await fileRepository.exists(fileId);
+    if (!fileExists) {
       throw new Error('File not found for this project');
     }
 
-    try {
-      if (file.path) {
-        await fs.unlink(file.path);
-      }
-    } catch (unlinkError: unknown) {
-      const systemError = unlinkError as NodeJS.ErrnoException;
-      if (systemError.code !== 'ENOENT') {
-        // eslint-disable-next-line no-console
-        console.warn(`Warning: Failed to delete file at ${file.path}:`, unlinkError);
-      }
-    }
-
-    await fileRepository.deleteOne(projectId, fileId);
+    await fileRepository.softDelete(projectId, fileId);
 
     return { message: 'File deleted successfully' };
   },

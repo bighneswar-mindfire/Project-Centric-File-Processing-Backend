@@ -11,6 +11,8 @@ import { ProjectInfoCard } from '../components/ProjectInfoCard';
 import { FilesWorkspace } from '../components/FilesWorkspace';
 import { JobsWorkspace } from '../components/JobsWorkspace';
 import { Header } from '../components/Header';
+import { ErrorModal } from '../components/ErrorModal'; // Imported ErrorModal
+import { SuccessModal } from '../components/SuccessModal'; // Imported SuccessModal
 
 export const ProjectDetails: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -24,6 +26,25 @@ export const ProjectDetails: React.FC = () => {
   const [files, setFiles] = useState<FileMetadata[]>([]);
   const [jobs, setJobs] = useState<JobMetadata[]>([]);
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
+  const [isErrorOpen, setIsErrorOpen] = useState(false);
+  const [errorTitle, setErrorTitle] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const [isSuccessOpen, setIsSuccessOpen] = useState(false);
+  const [successTitle, setSuccessTitle] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+
+  const triggerErrorModal = (title: string, message: string) => {
+    setErrorTitle(title);
+    setErrorMessage(message);
+    setIsErrorOpen(true);
+  };
+
+  const triggerSuccessModal = (title: string, message: string) => {
+    setSuccessTitle(title);
+    setSuccessMessage(message);
+    setIsSuccessOpen(true);
+  };
 
   //project details and files list
   useEffect(() => {
@@ -108,7 +129,6 @@ export const ProjectDetails: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/*header*/}
       <Header />
 
       {/*body */}
@@ -159,6 +179,8 @@ export const ProjectDetails: React.FC = () => {
                   setFiles={setFiles}
                   selectedFileIds={selectedFileIds}
                   toggleFileSelectionForZip={toggleFileSelectionForZip}
+                  onError={triggerErrorModal} // Passed error callback prop
+                  onSuccess={triggerSuccessModal} // Passed success callback prop
                 />
               </div>
 
@@ -178,6 +200,27 @@ export const ProjectDetails: React.FC = () => {
           </div>
         )}
       </main>
+
+      {/* Mounted custom popup dialogs */}
+      <ErrorModal
+        isOpen={isErrorOpen}
+        title={errorTitle}
+        message={errorMessage}
+        onClose={() => {
+          setIsErrorOpen(false);
+          setErrorMessage('');
+        }}
+      />
+
+      <SuccessModal
+        isOpen={isSuccessOpen}
+        title={successTitle}
+        message={successMessage}
+        onClose={() => {
+          setIsSuccessOpen(false);
+          setSuccessMessage('');
+        }}
+      />
     </div>
   );
 };

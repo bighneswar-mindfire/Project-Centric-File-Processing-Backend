@@ -7,6 +7,7 @@ import projectRoutes from './routes/projectRoutes.js';
 import fileRoutes from './routes/fileRoutes.js';
 import jobRoutes from './routes/jobRoutes.js';
 import authRoutes from './routes/authRoutes.js';
+import multer from 'multer';
 import cors from 'cors';
 import helmet from 'helmet';
 
@@ -42,7 +43,25 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-const PORT = process.env.PORT || 3000;
+app.use((err: unknown, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      res.status(400).json({ error: 'File size too large. Limit is 100MB.' });
+      return;
+    }
+    res.status(400).json({ error: `Upload error: ${err.message}` });
+    return;
+  }
+
+  if (err instanceof Error) {
+    res.status(400).json({ error: err.message });
+    return;
+  }
+
+  next();
+});
+
+const PORT = process.env.PORT;
 
 const MONGO_URI =
   process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/project_centric_file_processor';

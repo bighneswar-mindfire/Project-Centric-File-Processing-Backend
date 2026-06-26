@@ -19,8 +19,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   });
 
-  const [isLoading] = useState(false);
-
   const login = (newToken: string, newUser: User) => {
     try {
       localStorage.setItem('token', newToken);
@@ -46,9 +44,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider
-      value={{ token, user, isAuthenticated: !!token, isLoading, login, logout }}
-    >
+    <AuthContext.Provider value={{ token, user, isAuthenticated: !!token, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

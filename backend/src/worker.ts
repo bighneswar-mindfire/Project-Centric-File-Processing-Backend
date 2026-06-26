@@ -1,4 +1,3 @@
-/* eslint-disable no-console  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { workerData } from 'node:worker_threads';
 import fs from 'node:fs';
@@ -7,6 +6,7 @@ import * as archiver from 'archiver';
 import { connectDatabase } from './database/index.js';
 import { JobModel, JobStatus } from './database/models/Job.js';
 import { FileModel } from './database/models/File.js';
+import logger from './utils/logger.js';
 
 interface WorkerPayload {
   jobId: string;
@@ -57,7 +57,7 @@ const runCompression = async () => {
       });
       await zipFileMetadata.save();
 
-      //job status:completed and progress:100%
+      //job status completed and progress 100%
       await JobModel.updateOne(
         { jobId, status: JobStatus.PROCESSING },
         {
@@ -70,17 +70,18 @@ const runCompression = async () => {
         },
       );
 
-      console.log(`[Worker] Job ${jobId} completed successfully.`);
+      logger.info(`[Worker] Job ${jobId} completed successfully.`);
       process.exit(0);
     } catch (dbError) {
-      console.error('[Worker] Error saving completed job details:', dbError);
+      logger.error({ err: dbError, jobId }, 'Error saving completed job details to database');
       process.exit(1);
     }
   });
 
   //error check
   archive.on('error', async (err: Error) => {
-    console.error(`[Worker] Archiver error on Job ${jobId}:`, err);
+    logger.error({ err, jobId }, 'Archiver engine error');
+
     await JobModel.updateOne(
       { jobId },
       {
@@ -90,7 +91,7 @@ const runCompression = async () => {
           completedAt: new Date(),
         },
       },
-    ).catch((dbErr) => console.error('[Worker] Failed to write failure status:', dbErr));
+    ).catch((dbErr) => logger.error({ err: dbErr }, 'Failed to write failure status to DB'));
     process.exit(1);
   });
 
@@ -104,7 +105,10 @@ const runCompression = async () => {
     if (fs.existsSync(file.path)) {
       archive.file(file.path, { name: file.name });
     } else {
-      console.warn(`[Worker] File missing on disk, skipping: ${file.path}`);
+      logger.warn(
+        { path: file.path, jobId },
+        'File missing on disk, skipping compression for this file',
+      );
     }
 
     // Update db progress
@@ -115,7 +119,7 @@ const runCompression = async () => {
       await JobModel.updateOne(
         { jobId, status: JobStatus.PROCESSING },
         { $set: { progress: progressPercent } },
-      ).catch((err) => console.error('[Worker] Progress update write failed:', err));
+      ).catch((err) => logger.error({ err }, 'Progress update write failed'));
     }
   }
 
@@ -124,7 +128,8 @@ const runCompression = async () => {
 };
 
 runCompression().catch(async (err) => {
-  console.error('[Worker] Fatal execution exception:', err);
+  logger.fatal({ err }, 'Fatal execution exception in Worker Thread');
+
   const { jobId } = workerData as WorkerPayload;
   await JobModel.updateOne(
     { jobId },
@@ -135,6 +140,6 @@ runCompression().catch(async (err) => {
         completedAt: new Date(),
       },
     },
-  ).catch((dbErr) => console.error('[Worker] Failed to record failure status:', dbErr));
+  ).catch((dbErr) => logger.error({ err: dbErr }, 'Failed to record fatal failure status'));
   process.exit(1);
 });

@@ -28,10 +28,16 @@ export const fileRepository = {
     return FileModel.find({ ...query, deletedAt: null });
   },
 
-  findProjectFiles: async (projectId: string): Promise<IFile[]> => {
-    return FileModel.find({ projectId, deletedAt: null }).select(
-      'fileId name size uploadedAt -_id',
-    );
+  findProjectFiles: async (projectId: string, page: number, limit: number) => {
+    const skip = (page - 1) * limit;
+    const data = await FileModel.find({ projectId, deletedAt: null })
+      .select('fileId name size uploadedAt -_id')
+      .sort({ uploadedAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const total = await FileModel.countDocuments({ projectId, deletedAt: null });
+    return { data, total };
   },
 
   count: async (projectId: string): Promise<number> => {

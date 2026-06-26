@@ -106,12 +106,22 @@ export const jobService = {
     return job;
   },
 
-  listJobs: async (projectId: string) => {
+  listJobs: async (projectId: string, page = 1, limit = 10) => {
     const projectExists = await projectRepository.exists(projectId);
     if (!projectExists) {
       throw new Error('Project not found');
     }
 
-    return jobRepository.findManyByProjectId(projectId);
+    const { data, total } = await jobRepository.findManyByProjectId(projectId, page, limit);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   },
 };

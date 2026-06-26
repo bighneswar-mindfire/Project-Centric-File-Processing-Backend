@@ -3,6 +3,7 @@ import { fileRepository } from '../repositories/fileRepository.js';
 import { projectRepository } from '../repositories/projectRepository.js';
 import { generateId } from '../utils/idGenerator.js';
 import { getMimeType } from '../utils/mimeTypeHelper.js';
+import logger from '../utils/logger.js';
 
 export const fileService = {
   uploadFiles: async (projectId: string, filesList: Express.Multer.File[] | undefined) => {
@@ -10,10 +11,9 @@ export const fileService = {
     if (!projectExists) {
       if (filesList && Array.isArray(filesList)) {
         for (const file of filesList) {
-          await fs.unlink(file.path).catch((err) =>
-            // eslint-disable-next-line no-console
-            console.error(`Warning: Failed to clean up file at ${file.path}:`, err),
-          );
+          await fs
+            .unlink(file.path)
+            .catch((err) => logger.error(`Warning: Failed to clean up file at ${file.path}:`, err));
         }
       }
       throw new Error('Project not found');
@@ -58,13 +58,23 @@ export const fileService = {
     };
   },
 
-  listProjectFiles: async (projectId: string) => {
+  listProjectFiles: async (projectId: string, page = 1, limit = 10) => {
     const projectExists = await projectRepository.exists(projectId);
     if (!projectExists) {
       throw new Error('Project not found');
     }
 
-    return fileRepository.findProjectFiles(projectId);
+    const { data, total } = await fileRepository.findProjectFiles(projectId, page, limit);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   },
 
   deleteFile: async (projectId: string, fileId: string) => {

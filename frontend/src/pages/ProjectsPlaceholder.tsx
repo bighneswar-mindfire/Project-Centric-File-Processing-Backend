@@ -8,6 +8,8 @@ import { CreateProjectModal } from '../components/CreateProjectModal';
 import { projectService, ProjectResponse } from '../services/projectService';
 import { DeleteConfirmationModal } from '../components/DeleteConfirmationModal';
 import { Header } from '../components/Header';
+import { Pagination } from '../components/Pagination'; // Imported Pagination UI
+import { PaginationMeta } from '../services/types';
 
 export const ProjectsPlaceholder: React.FC = () => {
   const navigate = useNavigate();
@@ -16,30 +18,34 @@ export const ProjectsPlaceholder: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState<PaginationMeta | null>(null);
+
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [targetProject, setTargetProject] = useState<ProjectResponse | null>(null);
 
   //fetching projects
+  const fetchProjects = async (page: number) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await projectService.getProjects(page, 6);
+      setProjects(response.data);
+      setPagination(response.meta);
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to retrieve projects.';
+      setError(errorMsg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchProjects = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const data = await projectService.getProjects();
-        setProjects(data);
-      } catch (err: unknown) {
-        const errorMsg = err instanceof Error ? err.message : 'Failed to retrieve projects.';
-        setError(errorMsg);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchProjects();
-  }, []);
+    fetchProjects(currentPage);
+  }, [currentPage]);
 
   const handleProjectCreated = (newProject: ProjectResponse) => {
     //adding new project
@@ -48,7 +54,12 @@ export const ProjectsPlaceholder: React.FC = () => {
       filesCount: 0,
       jobsCount: 0,
     };
-    setProjects((prev) => [projectWithDefaults, ...prev]);
+
+    if (currentPage === 1) {
+      setProjects((prev) => [projectWithDefaults, ...prev.slice(0, 5)]);
+    } else {
+      setCurrentPage(1);
+    }
   };
 
   const openDeleteModal = (project: ProjectResponse, e: React.MouseEvent) => {
@@ -61,8 +72,14 @@ export const ProjectsPlaceholder: React.FC = () => {
     if (!targetProject) return;
     try {
       await projectService.deleteProject(targetProject.id);
-      // deleteds project from the list UI
+
       setProjects((prev) => prev.filter((p) => p.id !== targetProject.id));
+
+      if (projects.length === 1 && currentPage > 1) {
+        setCurrentPage((prev) => prev - 1);
+      } else {
+        fetchProjects(currentPage);
+      }
     } catch (err: unknown) {
       const errorMsg = err instanceof Error ? err.message : 'Deletion failed.';
       alert(errorMsg);
@@ -116,53 +133,60 @@ export const ProjectsPlaceholder: React.FC = () => {
           )}
 
           {projects.length > 0 && !isLoading && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {projects.map((project) => (
-                <Card
-                  key={project.id}
-                  className="hover:shadow-md transition-shadow cursor-pointer flex flex-col justify-between"
-                  onClick={() => navigate(`/projects/${project.id}`)}
-                >
-                  <CardHeader className="pb-4">
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-1">
-                        <CardTitle className="text-xl font-bold text-slate-900">
-                          {project.name}
-                        </CardTitle>
-                        <span className="text-xs text-slate-400 font-mono">ID: {project.id}</span>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {projects.map((project) => (
+                  <Card
+                    key={project.id}
+                    className="hover:shadow-md transition-shadow cursor-pointer flex flex-col justify-between"
+                    onClick={() => navigate(`/projects/${project.id}`)}
+                  >
+                    <CardHeader className="pb-4">
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-1">
+                          <CardTitle className="text-xl font-bold text-slate-900">
+                            {project.name}
+                          </CardTitle>
+                          <span className="text-xs text-slate-400 font-mono">ID: {project.id}</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={(e) => openDeleteModal(project, e)}
+                            className="p-1.5 rounded-md hover:bg-red-50 text-red-500 transition-colors cursor-pointer"
+                            title="Delete Project"
+                          >
+                            <Trash2 className="h-4.5 w-4.5" />
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={(e) => openDeleteModal(project, e)}
-                          className="p-1.5 rounded-md hover:bg-red-50 text-red-500 transition-colors cursor-pointer"
-                          title="Delete Project"
-                        >
-                          <Trash2 className="h-4.5 w-4.5" />
-                        </button>
+                    </CardHeader>
+
+                    <CardContent className="space-y-4">
+                      <p className="text-sm text-slate-500 line-clamp-2">{project.description}</p>
+
+                      <div className="flex items-center justify-between pt-4 border-t border-slate-100 text-xs text-slate-500">
+                        <div className="flex items-center space-x-4">
+                          <span title="Files count">
+                            File Count:{' '}
+                            <strong className="text-slate-700">{project.filesCount}</strong>
+                          </span>
+                          <span title="Jobs count">
+                            Job Count:{' '}
+                            <strong className="text-slate-700">{project.jobsCount}</strong>
+                          </span>
+                        </div>
+
+                        <span>Created: {new Date(project.createdAt).toLocaleDateString()}</span>
                       </div>
-                    </div>
-                  </CardHeader>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
 
-                  <CardContent className="space-y-4">
-                    <p className="text-sm text-slate-500 line-clamp-2">{project.description}</p>
-
-                    <div className="flex items-center justify-between pt-4 border-t border-slate-100 text-xs text-slate-500">
-                      <div className="flex items-center space-x-4">
-                        <span title="Files count">
-                          File Count:{' '}
-                          <strong className="text-slate-700">{project.filesCount}</strong>
-                        </span>
-                        <span title="Jobs count">
-                          Job Count: <strong className="text-slate-700">{project.jobsCount}</strong>
-                        </span>
-                      </div>
-
-                      <span>Created: {new Date(project.createdAt).toLocaleDateString()}</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+              {pagination && (
+                <Pagination meta={pagination} onPageChange={(page) => setCurrentPage(page)} />
+              )}
+            </>
           )}
         </div>
       </main>

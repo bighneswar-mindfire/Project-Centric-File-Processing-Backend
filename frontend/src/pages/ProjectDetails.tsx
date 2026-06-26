@@ -1,10 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, AlertCircle } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '../components/ui/Alert';
-import { projectService, ProjectResponse } from '../services/projectService';
-import { fileService, FileMetadata } from '../services/fileService';
-import { jobService, JobMetadata } from '../services/jobService';
 
 import { ProjectInfoCard } from '../components/ProjectInfoCard';
 import { FilesWorkspace } from '../components/FilesWorkspace';
@@ -12,16 +9,15 @@ import { JobsWorkspace } from '../components/JobsWorkspace';
 import { Header } from '../components/Header';
 import { SuccessModal } from '../components/SuccessModal';
 import { ErrorModal } from '../components/ErrorModal';
+import { useWorkspace } from '../hooks/useWorkspace';
 
 export const ProjectDetails: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
 
-  const [project, setProject] = useState<ProjectResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [files, setFiles] = useState<FileMetadata[]>([]);
-  const [jobs, setJobs] = useState<JobMetadata[]>([]);
+  const { project, setProject, files, setFiles, jobs, setJobs, isLoading, error } =
+    useWorkspace(projectId);
+
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
 
   const [modalStatus, setModalStatus] = useState<{
@@ -29,74 +25,6 @@ export const ProjectDetails: React.FC = () => {
     title: string;
     message: string;
   }>({ type: null, title: '', message: '' });
-
-  //project details and files list
-  useEffect(() => {
-    const fetchWorkspaceData = async () => {
-      if (!projectId) return;
-      try {
-        const [projectData, filesList, jobsList] = await Promise.all([
-          projectService.getProjectDetails(projectId),
-          fileService.getFiles(projectId),
-          jobService.getJobs(projectId),
-        ]);
-        setProject(projectData);
-        setFiles(filesList);
-        setJobs(jobsList);
-      } catch (err: unknown) {
-        const errorMsg =
-          err instanceof Error ? err.message : 'Failed to retrieve project workspace details.';
-        setError(errorMsg);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchWorkspaceData();
-  }, [projectId]);
-
-  //polling
-  useEffect(() => {
-    const activeJobs = jobs.filter(
-      (job) => job.status === 'PROCESSING' || job.status === 'PENDING',
-    );
-    if (activeJobs.length === 0) return;
-
-    const intervalId = setInterval(async () => {
-      try {
-        const updatedJobs = await Promise.all(
-          activeJobs.map(async (job) => {
-            const latestStatus = await jobService.getJobStatus(projectId!, job.jobId);
-            return latestStatus;
-          }),
-        );
-
-        setJobs((prevJobs) =>
-          prevJobs.map((prevJob) => {
-            const match = updatedJobs.find((u) => u.jobId === prevJob.jobId);
-            return match ? match : prevJob;
-          }),
-        );
-
-        const didAnyJobComplete = updatedJobs.some((uj) => {
-          const matchingPrevJob = jobs.find((pj) => pj.jobId === uj.jobId);
-          return (
-            matchingPrevJob && matchingPrevJob.status !== 'COMPLETED' && uj.status === 'COMPLETED'
-          );
-        });
-
-        if (didAnyJobComplete) {
-          const freshFiles = await fileService.getFiles(projectId!);
-          setFiles(freshFiles);
-        }
-      } catch (err) {
-        // eslint-disable-next-line no-console
-        console.error('Error polling background job status:', err);
-      }
-    }, 1500);
-
-    return () => clearInterval(intervalId);
-  }, [jobs, projectId]);
 
   const triggerSuccess = (title: string, message: string) => {
     setModalStatus({ type: 'success', title, message });
@@ -132,7 +60,7 @@ export const ProjectDetails: React.FC = () => {
         {isLoading && (
           <div className="flex-1 flex flex-col items-center justify-center py-32 space-y-4">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900"></div>
-            <p className="text-sm text-slate-500">Loading project.</p>
+            <p className="text-sm text-slate-500">Loading project...</p>
           </div>
         )}
 

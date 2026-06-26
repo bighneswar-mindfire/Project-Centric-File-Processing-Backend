@@ -48,8 +48,17 @@ export const projectService = {
     };
   },
 
-  listProjects: async () => {
-    return projectRepository.findAllWithStats();
+  listProjects: async (page = 1, limit = 10) => {
+    const { data, total } = await projectRepository.findAllWithStats(page, limit);
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   },
 
   updateProject: async (projectId: string, updateData: { name?: string; description?: string }) => {

@@ -1,4 +1,5 @@
 import { apiFetch } from '../lib/apiClient';
+import { PaginatedResponse } from './types';
 
 export interface FileMetadata {
   fileId: string;
@@ -14,8 +15,12 @@ export interface FileUploadResponse {
 }
 
 export const fileService = {
-  getFiles: async (projectId: string): Promise<FileMetadata[]> => {
-    const response = await apiFetch(`/api/projects/${projectId}/files`);
+  getFiles: async (
+    projectId: string,
+    page = 1,
+    limit = 10,
+  ): Promise<PaginatedResponse<FileMetadata>> => {
+    const response = await apiFetch(`/api/projects/${projectId}/files?page=${page}&limit=${limit}`);
     return response.json();
   },
 

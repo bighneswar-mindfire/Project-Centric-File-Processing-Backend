@@ -10,8 +10,15 @@ export const jobRepository = {
     return JobModel.findOne({ projectId, jobId, deletedAt: null });
   },
 
-  findManyByProjectId: async (projectId: string): Promise<IJob[]> => {
-    return JobModel.find({ projectId, deletedAt: null }).sort({ createdAt: -1 });
+  findManyByProjectId: async (projectId: string, page: number, limit: number) => {
+    const skip = (page - 1) * limit;
+    const data = await JobModel.find({ projectId, deletedAt: null })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const total = await JobModel.countDocuments({ projectId, deletedAt: null });
+    return { data, total };
   },
 
   count: async (projectId: string): Promise<number> => {

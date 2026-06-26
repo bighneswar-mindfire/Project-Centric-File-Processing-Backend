@@ -1,4 +1,5 @@
 import { apiFetch } from '../lib/apiClient';
+import { PaginatedResponse } from './types';
 
 export interface ProjectResponse {
   id: string;
@@ -10,8 +11,8 @@ export interface ProjectResponse {
 }
 
 export const projectService = {
-  getProjects: async (): Promise<ProjectResponse[]> => {
-    const response = await apiFetch('/api/projects');
+  getProjects: async (page = 1, limit = 6): Promise<PaginatedResponse<ProjectResponse>> => {
+    const response = await apiFetch(`/api/projects?page=${page}&limit=${limit}`);
     return response.json();
   },
 

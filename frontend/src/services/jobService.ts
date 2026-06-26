@@ -1,4 +1,5 @@
 import { apiFetch } from '../lib/apiClient';
+import { PaginatedResponse } from './types';
 
 export interface JobMetadata {
   jobId: string;
@@ -28,8 +29,18 @@ export const jobService = {
     return response.json();
   },
 
-  getJobs: async (projectId: string): Promise<JobMetadata[]> => {
-    const response = await apiFetch(`/api/projects/${projectId}/jobs`);
+  getJobs: async (
+    projectId: string,
+    page = 1,
+    limit = 10,
+  ): Promise<PaginatedResponse<JobMetadata>> => {
+    const response = await apiFetch(`/api/projects/${projectId}/jobs?page=${page}&limit=${limit}`);
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to fetch jobs list.');
+    }
+
     return response.json();
   },
 };

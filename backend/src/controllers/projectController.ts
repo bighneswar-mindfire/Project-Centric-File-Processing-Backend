@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { projectService } from '../services/projectService.js';
+import logger from '../utils/logger.js';
 
 export const createProject = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -94,9 +95,13 @@ export const deleteProject = async (req: Request, res: Response): Promise<void> 
 
 export const listProjects = async (req: Request, res: Response): Promise<void> => {
   try {
-    const result = await projectService.listProjects();
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+
+    const result = await projectService.listProjects(page, limit);
     res.status(200).json(result);
-  } catch {
+  } catch (error: unknown) {
+    logger.error({ error }, 'Error in listProjects controller');
     res.status(500).json({ error: 'Internal server error occurred.' });
   }
 };

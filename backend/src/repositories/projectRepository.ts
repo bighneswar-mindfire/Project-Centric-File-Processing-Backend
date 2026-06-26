@@ -46,57 +46,70 @@ export const projectRepository = {
     return ProjectModel.find({ deletedAt: null }).sort({ createdAt: -1 });
   },
 
-  findAllWithStats: async (): Promise<ProjectWithStats[]> => {
-    return ProjectModel.aggregate<ProjectWithStats>([
+  findAllWithStats: async (page: number, limit: number) => {
+    const skip = (page - 1) * limit;
+
+    const results = await ProjectModel.aggregate([
       { $match: { deletedAt: null } },
-
       { $sort: { createdAt: -1 } },
-
       {
-        $lookup: {
-          from: 'files',
-          let: { projId: '$projectId' },
-          pipeline: [
+        $facet: {
+          data: [
+            { $skip: skip },
+            { $limit: limit },
             {
-              $match: {
-                $expr: {
-                  $and: [{ $eq: ['$projectId', '$$projId'] }, { $eq: ['$deletedAt', null] }],
-                },
+              $lookup: {
+                from: 'files',
+                let: { projId: '$projectId' },
+                pipeline: [
+                  {
+                    $match: {
+                      $expr: {
+                        $and: [{ $eq: ['$projectId', '$$projId'] }, { $eq: ['$deletedAt', null] }],
+                      },
+                    },
+                  },
+                ],
+                as: 'files',
+              },
+            },
+            {
+              $lookup: {
+                from: 'jobs',
+                let: { projId: '$projectId' },
+                pipeline: [
+                  {
+                    $match: {
+                      $expr: {
+                        $and: [{ $eq: ['$projectId', '$$projId'] }, { $eq: ['$deletedAt', null] }],
+                      },
+                    },
+                  },
+                ],
+                as: 'jobs',
+              },
+            },
+            {
+              $project: {
+                id: '$projectId',
+                name: 1,
+                description: 1,
+                filesCount: { $size: '$files' },
+                jobsCount: { $size: '$jobs' },
+                createdAt: 1,
+                _id: 0,
               },
             },
           ],
-          as: 'files',
-        },
-      },
 
-      {
-        $lookup: {
-          from: 'jobs',
-          let: { projId: '$projectId' },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [{ $eq: ['$projectId', '$$projId'] }, { $eq: ['$deletedAt', null] }],
-                },
-              },
-            },
-          ],
-          as: 'jobs',
-        },
-      },
-
-      {
-        $project: {
-          id: '$projectId',
-          name: 1,
-          description: 1,
-          filesCount: { $size: '$files' },
-          jobsCount: { $size: '$jobs' },
-          createdAt: 1,
-          _id: 0,
+          metadata: [{ $count: 'total' }],
         },
       },
     ]);
+
+    const data = results[0].data;
+    const total = results[0].metadata[0]?.total || 0;
+
+    return { data, total };
   },
 };

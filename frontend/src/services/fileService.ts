@@ -1,4 +1,4 @@
-const API_BASE_URL = '/api';
+import { apiFetch } from '../lib/apiClient';
 
 export interface FileMetadata {
   fileId: string;
@@ -14,97 +14,52 @@ export interface FileUploadResponse {
 }
 
 export const fileService = {
-  //upload files using XMLHttpRequest
+  getFiles: async (projectId: string): Promise<FileMetadata[]> => {
+    const response = await apiFetch(`/api/projects/${projectId}/files`);
+    return response.json();
+  },
+
+  deleteFile: async (projectId: string, fileId: string): Promise<{ message: string }> => {
+    const response = await apiFetch(`/api/projects/${projectId}/files/${fileId}`, {
+      method: 'DELETE',
+    });
+    return response.json();
+  },
+
   uploadFiles: (
     projectId: string,
     files: File[],
-    onProgress: (progress: number) => void,
+    onProgress: (p: number) => void,
   ): Promise<FileUploadResponse> => {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       const token = localStorage.getItem('token');
 
-      xhr.open('POST', `${API_BASE_URL}/projects/${projectId}/files`);
+      xhr.open('POST', `/api/projects/${projectId}/files`);
+      if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
 
-      //authorization headers
-      if (token) {
-        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-      }
-
-      //upload progress bar
       xhr.upload.addEventListener('progress', (event) => {
-        if (event.lengthComputable) {
-          const percentComplete = Math.round((event.loaded / event.total) * 100);
-          onProgress(percentComplete);
-        }
+        if (event.lengthComputable) onProgress(Math.round((event.loaded / event.total) * 100));
       });
 
-      //successful uploads
       xhr.onload = () => {
+        // ─── ADD THE 401 CHECK FOR XHR HERE ───
+        if (xhr.status === 401) {
+          localStorage.clear();
+          window.location.href = '/login';
+          return reject(new Error('Session expired.'));
+        }
+
         if (xhr.status >= 200 && xhr.status < 300) {
-          try {
-            const data = JSON.parse(xhr.responseText);
-            resolve(data);
-          } catch {
-            reject(new Error('Failed to parse server response.'));
-          }
+          resolve(JSON.parse(xhr.responseText));
         } else {
-          try {
-            const data = JSON.parse(xhr.responseText);
-            reject(new Error(data.error || 'Upload failed.'));
-          } catch {
-            reject(new Error('Upload failed.'));
-          }
+          reject(new Error('Upload failed.'));
         }
       };
 
-      //error
-      xhr.onerror = () => {
-        reject(new Error('Network error occurred during file upload.'));
-      };
-
-      //for api call
       const formData = new FormData();
-      files.forEach((file) => {
-        formData.append('files', file);
-      });
-
+      files.forEach((file) => formData.append('files', file));
       xhr.send(formData);
     });
-  },
-
-  //fetch files
-  getFiles: async (projectId: string): Promise<FileMetadata[]> => {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`${API_BASE_URL}/projects/${projectId}/files`, {
-      method: 'GET',
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Failed to fetch files.');
-    }
-
-    return response.json();
-  },
-
-  deleteFile: async (projectId: string, fileId: string): Promise<{ message: string }> => {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`${API_BASE_URL}/projects/${projectId}/files/${fileId}`, {
-      method: 'DELETE',
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Failed to delete file.');
-    }
-
-    return response.json();
   },
 };

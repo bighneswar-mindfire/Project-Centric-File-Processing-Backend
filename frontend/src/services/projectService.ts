@@ -1,4 +1,4 @@
-const API_BASE_URL = '/api';
+import { apiFetch } from '../lib/apiClient';
 
 export interface ProjectResponse {
   id: string;
@@ -10,77 +10,28 @@ export interface ProjectResponse {
 }
 
 export const projectService = {
-  // send data to db
-  createProject: async (name: string, description: string): Promise<ProjectResponse> => {
-    const token = localStorage.getItem('token');
-
-    const response = await fetch(`${API_BASE_URL}/projects`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify({ name, description }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Failed to create project.');
-    }
-
-    return response.json();
-  },
-
   getProjects: async (): Promise<ProjectResponse[]> => {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`${API_BASE_URL}/projects`, {
-      method: 'GET',
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Failed to fetch projects.');
-    }
-
+    const response = await apiFetch('/api/projects');
     return response.json();
   },
 
   deleteProject: async (projectId: string): Promise<{ message: string }> => {
-    const token = localStorage.getItem('token');
-
-    const response = await fetch(`${API_BASE_URL}/projects/${projectId}`, {
+    const response = await apiFetch(`/api/projects/${projectId}`, {
       method: 'DELETE',
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
     });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Failed to delete project.');
-    }
-
     return response.json();
   },
 
   getProjectDetails: async (projectId: string): Promise<ProjectResponse> => {
-    const token = localStorage.getItem('token');
+    const response = await apiFetch(`/api/projects/${projectId}`);
+    return response.json();
+  },
 
-    const response = await fetch(`${API_BASE_URL}/projects/${projectId}`, {
-      method: 'GET',
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
+  createProject: async (name: string, description: string): Promise<ProjectResponse> => {
+    const response = await apiFetch('/api/projects', {
+      method: 'POST',
+      body: JSON.stringify({ name, description }),
     });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Failed to fetch project details.');
-    }
-
     return response.json();
   },
 };

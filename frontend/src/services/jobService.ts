@@ -1,4 +1,4 @@
-const API_BASE_URL = '/api';
+import { apiFetch } from '../lib/apiClient';
 
 export interface JobMetadata {
   jobId: string;
@@ -16,55 +16,20 @@ export interface JobMetadata {
 
 export const jobService = {
   createZipJob: async (projectId: string, fileIds: string[]): Promise<JobMetadata> => {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`${API_BASE_URL}/projects/${projectId}/jobs/zip`, {
+    const response = await apiFetch(`/api/projects/${projectId}/jobs/zip`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
       body: JSON.stringify({ fileIds }),
     });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Failed to trigger compression job.');
-    }
-
     return response.json();
   },
 
   getJobStatus: async (projectId: string, jobId: string): Promise<JobMetadata> => {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`${API_BASE_URL}/projects/${projectId}/jobs/${jobId}`, {
-      method: 'GET',
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Failed to fetch job status.');
-    }
-
+    const response = await apiFetch(`/api/projects/${projectId}/jobs/${jobId}`);
     return response.json();
   },
 
   getJobs: async (projectId: string): Promise<JobMetadata[]> => {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`${API_BASE_URL}/projects/${projectId}/jobs`, {
-      method: 'GET',
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Failed to fetch jobs list.');
-    }
-
+    const response = await apiFetch(`/api/projects/${projectId}/jobs`);
     return response.json();
   },
 };

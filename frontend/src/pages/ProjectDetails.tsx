@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, AlertCircle } from 'lucide-react';
-
 import { Alert, AlertTitle, AlertDescription } from '../components/ui/Alert';
 import { projectService, ProjectResponse } from '../services/projectService';
 import { fileService, FileMetadata } from '../services/fileService';
@@ -11,40 +10,25 @@ import { ProjectInfoCard } from '../components/ProjectInfoCard';
 import { FilesWorkspace } from '../components/FilesWorkspace';
 import { JobsWorkspace } from '../components/JobsWorkspace';
 import { Header } from '../components/Header';
-import { ErrorModal } from '../components/ErrorModal'; // Imported ErrorModal
-import { SuccessModal } from '../components/SuccessModal'; // Imported SuccessModal
+import { SuccessModal } from '../components/SuccessModal';
+import { ErrorModal } from '../components/ErrorModal';
 
 export const ProjectDetails: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
 
-  //states
   const [project, setProject] = useState<ProjectResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   const [files, setFiles] = useState<FileMetadata[]>([]);
   const [jobs, setJobs] = useState<JobMetadata[]>([]);
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
-  const [isErrorOpen, setIsErrorOpen] = useState(false);
-  const [errorTitle, setErrorTitle] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
 
-  const [isSuccessOpen, setIsSuccessOpen] = useState(false);
-  const [successTitle, setSuccessTitle] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
-
-  const triggerErrorModal = (title: string, message: string) => {
-    setErrorTitle(title);
-    setErrorMessage(message);
-    setIsErrorOpen(true);
-  };
-
-  const triggerSuccessModal = (title: string, message: string) => {
-    setSuccessTitle(title);
-    setSuccessMessage(message);
-    setIsSuccessOpen(true);
-  };
+  const [modalStatus, setModalStatus] = useState<{
+    type: 'success' | 'error' | null;
+    title: string;
+    message: string;
+  }>({ type: null, title: '', message: '' });
 
   //project details and files list
   useEffect(() => {
@@ -73,15 +57,11 @@ export const ProjectDetails: React.FC = () => {
 
   //polling
   useEffect(() => {
-    //activeand uncompleted jobs
     const activeJobs = jobs.filter(
       (job) => job.status === 'PROCESSING' || job.status === 'PENDING',
     );
-
-    //polling stop
     if (activeJobs.length === 0) return;
 
-    //start polling
     const intervalId = setInterval(async () => {
       try {
         const updatedJobs = await Promise.all(
@@ -91,7 +71,6 @@ export const ProjectDetails: React.FC = () => {
           }),
         );
 
-        //add new jobs back into state
         setJobs((prevJobs) =>
           prevJobs.map((prevJob) => {
             const match = updatedJobs.find((u) => u.jobId === prevJob.jobId);
@@ -99,7 +78,6 @@ export const ProjectDetails: React.FC = () => {
           }),
         );
 
-        //list refresh
         const didAnyJobComplete = updatedJobs.some((uj) => {
           const matchingPrevJob = jobs.find((pj) => pj.jobId === uj.jobId);
           return (
@@ -117,9 +95,20 @@ export const ProjectDetails: React.FC = () => {
       }
     }, 1500);
 
-    // cleanup
     return () => clearInterval(intervalId);
   }, [jobs, projectId]);
+
+  const triggerSuccess = (title: string, message: string) => {
+    setModalStatus({ type: 'success', title, message });
+  };
+
+  const triggerError = (title: string, message: string) => {
+    setModalStatus({ type: 'error', title, message });
+  };
+
+  const closeModals = () => {
+    setModalStatus((prev) => ({ ...prev, type: null }));
+  };
 
   const toggleFileSelectionForZip = (fileId: string) => {
     setSelectedFileIds((prev) =>
@@ -131,9 +120,7 @@ export const ProjectDetails: React.FC = () => {
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <Header />
 
-      {/*body */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-6 space-y-6 flex flex-col">
-        {/*back button */}
         <button
           onClick={() => navigate('/projects')}
           className="flex items-center text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors cursor-pointer w-fit"
@@ -142,7 +129,6 @@ export const ProjectDetails: React.FC = () => {
           Back to Projects
         </button>
 
-        {/*loading*/}
         {isLoading && (
           <div className="flex-1 flex flex-col items-center justify-center py-32 space-y-4">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900"></div>
@@ -150,7 +136,6 @@ export const ProjectDetails: React.FC = () => {
           </div>
         )}
 
-        {/*error state*/}
         {error && !isLoading && (
           <Alert variant="destructive" className="max-w-xl mx-auto flex items-start space-x-3">
             <AlertCircle className="h-5 w-5 shrink-0" />
@@ -161,15 +146,11 @@ export const ProjectDetails: React.FC = () => {
           </Alert>
         )}
 
-        {/*workspace loaded */}
         {project && !isLoading && (
           <div className="flex-1 flex flex-col space-y-6 animate-in fade-in duration-200">
-            {/* project header */}
             <ProjectInfoCard project={project} />
 
-            {/* tow column layout */}
             <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch min-h-0">
-              {/* files list*/}
               <div className="lg:col-span-2 flex flex-col h-full min-h-0">
                 <FilesWorkspace
                   projectId={projectId!}
@@ -179,12 +160,11 @@ export const ProjectDetails: React.FC = () => {
                   setFiles={setFiles}
                   selectedFileIds={selectedFileIds}
                   toggleFileSelectionForZip={toggleFileSelectionForZip}
-                  onError={triggerErrorModal} // Passed error callback prop
-                  onSuccess={triggerSuccessModal} // Passed success callback prop
+                  onError={triggerError}
+                  onSuccess={triggerSuccess}
                 />
               </div>
 
-              {/* jobs */}
               <div className="flex flex-col h-full min-h-0">
                 <JobsWorkspace
                   projectId={projectId!}
@@ -201,25 +181,18 @@ export const ProjectDetails: React.FC = () => {
         )}
       </main>
 
-      {/* Mounted custom popup dialogs */}
-      <ErrorModal
-        isOpen={isErrorOpen}
-        title={errorTitle}
-        message={errorMessage}
-        onClose={() => {
-          setIsErrorOpen(false);
-          setErrorMessage('');
-        }}
+      <SuccessModal
+        isOpen={modalStatus.type === 'success'}
+        title={modalStatus.title}
+        message={modalStatus.message}
+        onClose={closeModals}
       />
 
-      <SuccessModal
-        isOpen={isSuccessOpen}
-        title={successTitle}
-        message={successMessage}
-        onClose={() => {
-          setIsSuccessOpen(false);
-          setSuccessMessage('');
-        }}
+      <ErrorModal
+        isOpen={modalStatus.type === 'error'}
+        title={modalStatus.title}
+        message={modalStatus.message}
+        onClose={closeModals}
       />
     </div>
   );

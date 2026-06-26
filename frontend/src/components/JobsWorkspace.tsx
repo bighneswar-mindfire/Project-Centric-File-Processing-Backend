@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Loader2, DownloadCloud } from 'lucide-react';
+import { Loader2, DownloadCloud, AlertCircle } from 'lucide-react'; // Added AlertCircle
 import { Button } from './ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { ScrollArea } from './ui/scroll-area';
 import { Progress } from './ui/progress';
+import { Alert, AlertDescription } from './ui/Alert';
 import { jobService, JobMetadata } from '../services/jobService';
 import { ProjectResponse } from '../services/projectService';
 
@@ -28,13 +29,20 @@ export const JobsWorkspace: React.FC<JobsWorkspaceProps> = ({
 }) => {
   const [isCreatingJob, setIsCreatingJob] = useState(false);
 
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  //createing zip job logic
   const handleCreateZipJob = async () => {
     if (!projectId || selectedFileIds.length === 0) return;
 
     setIsCreatingJob(true);
+    setErrorMessage(null); // Clear previous errors
+
     try {
+      //compression starts
       const newJob = await jobService.createZipJob(projectId, selectedFileIds);
 
+      //add to job list
       const jobWithDate: JobMetadata = {
         ...newJob,
         createdAt: newJob.createdAt || new Date().toISOString(),
@@ -52,7 +60,8 @@ export const JobsWorkspace: React.FC<JobsWorkspaceProps> = ({
       setSelectedFileIds([]);
     } catch (err: unknown) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to start compression job.';
-      alert(errorMsg);
+
+      setErrorMessage(errorMsg);
     } finally {
       setIsCreatingJob(false);
     }
@@ -62,7 +71,6 @@ export const JobsWorkspace: React.FC<JobsWorkspaceProps> = ({
   const handleDownloadZip = (outputFileId: string) => {
     if (!projectId) return;
     const token = localStorage.getItem('token');
-
     window.open(
       `/api/projects/${projectId}/files/${outputFileId}/download?token=${token}`,
       '_blank',
@@ -78,6 +86,15 @@ export const JobsWorkspace: React.FC<JobsWorkspaceProps> = ({
 
         {/*jobs list*/}
         <CardContent className="p-4 space-y-3 flex-1 flex flex-col min-h-0">
+          {errorMessage && (
+            <Alert variant="destructive" className="py-2 px-3">
+              <div className="flex items-center space-x-2">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="text-[11px]">{errorMessage}</AlertDescription>
+              </div>
+            </Alert>
+          )}
+
           {jobs.length === 0 ? (
             <p className="text-xs text-slate-400 italic py-8 text-center">No zipping jobs.</p>
           ) : (

@@ -2,9 +2,6 @@ import { Request, Response, NextFunction } from 'express';
 import { jwtVerify } from 'jose';
 import { UserModel } from '../database/models/User.js';
 
-const JWT_SECRET_STRING = process.env.JWT_SECRET;
-const JWT_SECRET = new TextEncoder().encode(JWT_SECRET_STRING);
-
 export interface AuthenticatedRequest extends Request {
   user?: {
     email: string;
@@ -17,6 +14,15 @@ export const authenticateToken = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
+    const secretString = process.env.JWT_SECRET;
+
+    if (!secretString) {
+      res.status(500).json({ error: 'Internal server configuration error: Secret missing.' });
+      return;
+    }
+
+    const secretKey = new TextEncoder().encode(secretString);
+
     const authHeader = req.headers['authorization'];
     let token = authHeader && authHeader.split(' ')[1];
 
@@ -29,7 +35,7 @@ export const authenticateToken = async (
       return;
     }
 
-    const { payload } = await jwtVerify(token, JWT_SECRET);
+    const { payload } = await jwtVerify(token, secretKey);
 
     const email = payload.email as string;
     if (!email) {
@@ -43,13 +49,11 @@ export const authenticateToken = async (
       return;
     }
 
-    //for adding user details
     const authReq = req as AuthenticatedRequest;
     authReq.user = { email };
 
     next();
   } catch {
-    // token expired
     res.status(401).json({ error: 'Access denied. Token has expired or is invalid.' });
   }
 };

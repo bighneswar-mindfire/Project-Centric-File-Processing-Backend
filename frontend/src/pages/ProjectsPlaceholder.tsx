@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FolderKanban, Trash2 } from 'lucide-react';
 import { Button } from '../components/ui/button';
@@ -28,24 +28,45 @@ export const ProjectsPlaceholder: React.FC = () => {
   const [targetProject, setTargetProject] = useState<ProjectResponse | null>(null);
 
   //fetching projects
-  const fetchProjects = async (page: number) => {
-    setIsLoading(true);
-    setError(null);
+  const fetchProjects = useCallback(async (page: number) => {
     try {
       const response = await projectService.getProjects(page, 6);
       setProjects(response.data);
       setPagination(response.meta);
+      setError(null);
     } catch (err: unknown) {
       const errorMsg = err instanceof Error ? err.message : 'Failed to retrieve projects.';
       setError(errorMsg);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchProjects(currentPage);
-  }, [currentPage]);
+    (async () => {
+      await fetchProjects(currentPage);
+    })();
+  }, [currentPage, fetchProjects]);
+
+  const handleConfirmDelete = async () => {
+    if (!targetProject) return;
+    setIsLoading(true);
+
+    try {
+      await projectService.deleteProject(targetProject.id);
+
+      setProjects((prev) => prev.filter((p) => p.id !== targetProject.id));
+
+      if (projects.length === 1 && currentPage > 1) {
+        setCurrentPage((prev) => prev - 1);
+      } else {
+        fetchProjects(currentPage);
+      }
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Deletion failed.';
+      alert(errorMsg);
+    }
+  };
 
   const handleProjectCreated = (newProject: ProjectResponse) => {
     //adding new project
@@ -66,24 +87,6 @@ export const ProjectsPlaceholder: React.FC = () => {
     e.stopPropagation(); //stops opening details page
     setTargetProject(project);
     setIsDeleteOpen(true);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!targetProject) return;
-    try {
-      await projectService.deleteProject(targetProject.id);
-
-      setProjects((prev) => prev.filter((p) => p.id !== targetProject.id));
-
-      if (projects.length === 1 && currentPage > 1) {
-        setCurrentPage((prev) => prev - 1);
-      } else {
-        fetchProjects(currentPage);
-      }
-    } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : 'Deletion failed.';
-      alert(errorMsg);
-    }
   };
 
   return (

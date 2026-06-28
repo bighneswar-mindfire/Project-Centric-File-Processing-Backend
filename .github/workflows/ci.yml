@@ -7,12 +7,18 @@ on:
     branches: [main]
 
 jobs:
-  # backend Checks
   backend-checks:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./backend
+
+    services:
+      mongodb:
+        image: mongo:8.0
+        ports:
+          - 27017:27017
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -36,7 +42,14 @@ jobs:
       - name: Build Code
         run: npm run build
 
-  #frontend Checks
+      - name: Run Tests
+        run: npm test
+        env:
+          NODE_ENV: test
+
+          MONGO_URI: mongodb://127.0.0.1:27017/ci_test_db
+          JWT_SECRET: ci_test_secret_key_at_least_32_chars_long
+
   frontend-checks:
     runs-on: ubuntu-latest
     defaults:
@@ -64,6 +77,9 @@ jobs:
 
       - name: Build Code
         run: npm run build
+
+      - name: Run Tests
+        run: npm test
 
   gitleaks-scan:
     runs-on: ubuntu-latest

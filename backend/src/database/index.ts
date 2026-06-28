@@ -2,6 +2,14 @@
 import mongoose from 'mongoose';
 
 export const connectDatabase = async (uri: string): Promise<void> => {
+  if (mongoose.connection.readyState === 1 && mongoose.connection.host !== 'localhost') {
+    if (process.env.NODE_ENV === 'test') {
+      await mongoose.disconnect();
+    } else {
+      return;
+    }
+  }
+
   if (mongoose.connection.readyState === 1) {
     console.log('MongoDB is already connected (reusing active connection).');
     return;

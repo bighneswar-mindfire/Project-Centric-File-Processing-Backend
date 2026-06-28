@@ -72,7 +72,7 @@ if (process.env.NODE_ENV === 'production') {
       console.log(`Production server running on port ${PORT}`);
     });
   });
-} else {
+} else if (process.env.NODE_ENV !== 'test') {
   connectDatabase(MONGO_URI);
 }
 

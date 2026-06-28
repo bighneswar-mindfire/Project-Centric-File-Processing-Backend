@@ -13,8 +13,7 @@
     "format:check": "prettier --check \"src/**/*.ts\"",
     "test": "vitest run src/tests --fileParallelism=false",
     "test:watch": "vitest",
-    "prepare": "husky",
-    "preview": "vite preview"
+    "prepare": "husky"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.0.2",
@@ -25,7 +24,7 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/multer": "^2.1.0",
-    "@types/node": "^25.9.1",
+    "@types/node": "^25.9.4",
     "@types/supertest": "^7.2.0",
     "@typescript-eslint/eslint-plugin": "^8.60.1",
     "@typescript-eslint/parser": "^8.60.1",
@@ -45,8 +44,6 @@
     "vitest": "^4.1.8"
   },
   "dependencies": {
-    "@types/express": "^4.17.21",
-    "@types/node": "^20.12.7",
     "archiver": "^8.0.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",

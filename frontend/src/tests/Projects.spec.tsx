@@ -5,7 +5,13 @@ import { AuthProvider } from '../context/AuthProvider';
 import { ProjectsPlaceholder } from '../pages/ProjectsPlaceholder';
 import { projectService } from '../services/projectService';
 
-// projects API mock
+const mockMeta = {
+  total: 0,
+  page: 1,
+  limit: 10,
+  totalPages: 0,
+};
+
 vi.mock('../services/projectService', () => ({
   projectService: {
     getProjects: vi.fn(),
@@ -29,15 +35,19 @@ describe('Projects List Component', () => {
   });
 
   it('should show the "No Projects Found" card if the list is empty', async () => {
-    vi.mocked(projectService.getProjects).mockResolvedValueOnce([]); // empty list
+    vi.mocked(projectService.getProjects).mockResolvedValueOnce({
+      data: [],
+      meta: mockMeta,
+    });
+
     renderWithProviders(<ProjectsPlaceholder />);
 
     const emptyHeader = await screen.findByRole('heading', { name: /no projects found/i });
     expect(emptyHeader).toBeInTheDocument();
   });
 
-  it('should render project list cards with file and job counts ', async () => {
-    const mockProjects = [
+  it('should render project list cards with file and job counts', async () => {
+    const mockProjectsData = [
       {
         id: 'proj_1294',
         name: 'Video Assets Transcoder',
@@ -47,15 +57,17 @@ describe('Projects List Component', () => {
         createdAt: new Date().toISOString(),
       },
     ];
-    vi.mocked(projectService.getProjects).mockResolvedValueOnce(mockProjects);
+
+    vi.mocked(projectService.getProjects).mockResolvedValueOnce({
+      data: mockProjectsData,
+      meta: { ...mockMeta, total: 1, totalPages: 1 },
+    });
 
     renderWithProviders(<ProjectsPlaceholder />);
 
-    //check project title
     const projectTitle = await screen.findByText(/video assets transcoder/i);
     expect(projectTitle).toBeInTheDocument();
 
-    // check for job and file count
     expect(screen.getByText(/file count:/i)).toHaveTextContent('File Count: 14');
     expect(screen.getByText(/job count:/i)).toHaveTextContent('Job Count: 3');
   });

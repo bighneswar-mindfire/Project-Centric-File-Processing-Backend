@@ -7,7 +7,15 @@ import { projectService } from '../services/projectService';
 import { fileService } from '../services/fileService';
 import { jobService } from '../services/jobService';
 
-//mock project
+// Reusable mock pagination metadata
+const mockMeta = {
+  total: 0,
+  page: 1,
+  limit: 10,
+  totalPages: 0,
+};
+
+// Mock React Router's useParams
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return {
@@ -16,7 +24,7 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-//mock API Services
+// Mock API Services
 vi.mock('../services/projectService', () => ({
   projectService: {
     getProjectDetails: vi.fn(),
@@ -49,10 +57,12 @@ const renderWithProviders = (ui: React.ReactElement) => {
 
 describe('ProjectDetails Component', () => {
   it('should show a loading spinner initially on mount', () => {
-    //show loading state by keeping API requests pending
+    // Show loading state by keeping project details pending
     vi.mocked(projectService.getProjectDetails).mockReturnValue(new Promise(() => {}));
-    vi.mocked(fileService.getFiles).mockResolvedValue([]);
-    vi.mocked(jobService.getJobs).mockResolvedValue([]);
+
+    // Return paginated structure for files and jobs
+    vi.mocked(fileService.getFiles).mockResolvedValue({ data: [], meta: mockMeta });
+    vi.mocked(jobService.getJobs).mockResolvedValue({ data: [], meta: mockMeta });
 
     renderWithProviders(<ProjectDetails />);
 
@@ -63,8 +73,8 @@ describe('ProjectDetails Component', () => {
     vi.mocked(projectService.getProjectDetails).mockRejectedValueOnce(
       new Error('Database offline.'),
     );
-    vi.mocked(fileService.getFiles).mockResolvedValue([]);
-    vi.mocked(jobService.getJobs).mockResolvedValue([]);
+    vi.mocked(fileService.getFiles).mockResolvedValue({ data: [], meta: mockMeta });
+    vi.mocked(jobService.getJobs).mockResolvedValue({ data: [], meta: mockMeta });
 
     renderWithProviders(<ProjectDetails />);
 
@@ -83,7 +93,7 @@ describe('ProjectDetails Component', () => {
       createdAt: new Date().toISOString(),
     };
 
-    const mockFiles = [
+    const mockFilesData = [
       {
         fileId: 'file_2222',
         name: 'test.png',
@@ -93,7 +103,7 @@ describe('ProjectDetails Component', () => {
       },
     ];
 
-    const mockJobs = [
+    const mockJobsData = [
       {
         jobId: 'job_3333',
         projectId: 'proj_1111',
@@ -108,12 +118,20 @@ describe('ProjectDetails Component', () => {
     ];
 
     vi.mocked(projectService.getProjectDetails).mockResolvedValueOnce(mockProject);
-    vi.mocked(fileService.getFiles).mockResolvedValueOnce(mockFiles);
-    vi.mocked(jobService.getJobs).mockResolvedValueOnce(mockJobs);
+
+    // Fix: Resolve with data and meta properties
+    vi.mocked(fileService.getFiles).mockResolvedValue({
+      data: mockFilesData,
+      meta: { ...mockMeta, total: 1, totalPages: 1 },
+    });
+    vi.mocked(jobService.getJobs).mockResolvedValue({
+      data: mockJobsData,
+      meta: { ...mockMeta, total: 1, totalPages: 1 },
+    });
 
     renderWithProviders(<ProjectDetails />);
 
-    //  check project headers
+    // check project headers
     const projectName = await screen.findByText('Test');
     expect(projectName).toBeInTheDocument();
     expect(screen.getByText(/PROJECT ID: proj_1111/i)).toBeInTheDocument();

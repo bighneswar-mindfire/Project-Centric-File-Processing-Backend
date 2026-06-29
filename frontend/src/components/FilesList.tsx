@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { Trash, File as FileIcon, X, Check } from 'lucide-react'; // Added icons for confirm/cancel
+import { Trash, File as FileIcon, X, Check } from 'lucide-react';
 import { Checkbox } from './ui/checkbox';
 import { ScrollArea } from './ui/scroll-area';
-
 import { fileService, FileMetadata } from '../services/fileService';
 
 interface FilesListProps {
@@ -39,7 +38,7 @@ export const FilesList: React.FC<FilesListProps> = ({
     try {
       await fileService.deleteFile(projectId, fileId);
       onDeleteSuccess(fileId);
-      setFileToDelete(null); // Clear state after success
+      setFileToDelete(null);
     } catch (err: unknown) {
       const errorMsg = err instanceof Error ? err.message : 'Delete failed.';
       onError('Delete Failed', errorMsg);
@@ -65,8 +64,9 @@ export const FilesList: React.FC<FilesListProps> = ({
                   <Checkbox
                     checked={selectedFileIds.includes(file.fileId)}
                     onCheckedChange={() => toggleFileSelectionForZip(file.fileId)}
-                    disabled={fileToDelete !== null} // Disable checkboxes during confirm phase
+                    disabled={fileToDelete !== null}
                     className="cursor-pointer"
+                    aria-label={`Select ${file.name} for ZIP compression`}
                   />
                   <FileIcon className="h-4.5 w-4.5 text-slate-400 shrink-0" />
                   <div className="truncate">
@@ -94,7 +94,7 @@ export const FilesList: React.FC<FilesListProps> = ({
                         onClick={() => handleConfirmDelete(file.fileId)}
                         disabled={isDeleting}
                         className="p-1 rounded-md bg-red-600 text-white hover:bg-red-700 transition-colors cursor-pointer disabled:opacity-50"
-                        title="Confirm Delete"
+                        aria-label={`Confirm deletion of ${file.name}`}
                       >
                         <Check className="h-3.5 w-3.5" />
                       </button>
@@ -103,7 +103,7 @@ export const FilesList: React.FC<FilesListProps> = ({
                         onClick={() => setFileToDelete(null)}
                         disabled={isDeleting}
                         className="p-1 rounded-md bg-slate-200 text-slate-600 hover:bg-slate-300 transition-colors cursor-pointer disabled:opacity-50"
-                        title="Cancel"
+                        aria-label={`Cancel deletion of ${file.name}`}
                       >
                         <X className="h-3.5 w-3.5" />
                       </button>
@@ -111,9 +111,10 @@ export const FilesList: React.FC<FilesListProps> = ({
                   ) : (
                     <button
                       onClick={() => setFileToDelete(file.fileId)}
-                      disabled={fileToDelete !== null} // Prevent selecting multiple deletes at once
+                      disabled={fileToDelete !== null}
                       className="p-1.5 rounded-md hover:bg-red-50 text-red-500 transition-colors cursor-pointer disabled:opacity-30"
-                      title="Delete File"
+                      aria-label={`Delete ${file.name}`}
+                      title={`Delete ${file.name}`}
                     >
                       <Trash className="h-4 w-4" />
                     </button>

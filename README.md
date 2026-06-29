@@ -36,6 +36,16 @@ Built with **Express**, **TypeScript**, and **MongoDB (Mongoose)**, the applicat
 │   │   ├── projectController.ts
 │   │   ├── fileController.ts
 │   │   └── jobController.ts
+│   ├── repositories/
+│   │   ├── userRepository.ts
+│   │   ├── projectRepository.ts
+│   │   ├── fileRepository.ts
+│   │   └── jobRepository.ts
+│   ├── services/
+│   │   ├── authService.ts
+│   │   ├── projectService.ts
+│   │   ├── fileService.ts
+│   │   └── jobService.ts
 │   ├── middlewares/
 │   │   └── uploadMiddleware.ts
 │   ├── routes/

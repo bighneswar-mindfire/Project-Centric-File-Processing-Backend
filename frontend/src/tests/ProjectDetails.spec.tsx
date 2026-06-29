@@ -7,7 +7,6 @@ import { projectService } from '../services/projectService';
 import { fileService } from '../services/fileService';
 import { jobService } from '../services/jobService';
 
-// Reusable mock pagination metadata
 const mockMeta = {
   total: 0,
   page: 1,
@@ -15,7 +14,6 @@ const mockMeta = {
   totalPages: 0,
 };
 
-// Mock React Router's useParams
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return {
@@ -24,7 +22,6 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-// Mock API Services
 vi.mock('../services/projectService', () => ({
   projectService: {
     getProjectDetails: vi.fn(),
@@ -57,10 +54,8 @@ const renderWithProviders = (ui: React.ReactElement) => {
 
 describe('ProjectDetails Component', () => {
   it('should show a loading spinner initially on mount', () => {
-    // Show loading state by keeping project details pending
     vi.mocked(projectService.getProjectDetails).mockReturnValue(new Promise(() => {}));
 
-    // Return paginated structure for files and jobs
     vi.mocked(fileService.getFiles).mockResolvedValue({ data: [], meta: mockMeta });
     vi.mocked(jobService.getJobs).mockResolvedValue({ data: [], meta: mockMeta });
 
@@ -119,7 +114,6 @@ describe('ProjectDetails Component', () => {
 
     vi.mocked(projectService.getProjectDetails).mockResolvedValueOnce(mockProject);
 
-    // Fix: Resolve with data and meta properties
     vi.mocked(fileService.getFiles).mockResolvedValue({
       data: mockFilesData,
       meta: { ...mockMeta, total: 1, totalPages: 1 },

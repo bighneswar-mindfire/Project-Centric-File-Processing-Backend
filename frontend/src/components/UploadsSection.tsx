@@ -122,11 +122,19 @@ export const UploadsSection: React.FC<UploadsSectionProps> = ({
     >
       {/*drag drop area */}
       <div
+        role="region"
+        aria-label="File upload area"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            fileInputRef.current?.click();
+          }
+        }}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
-        className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors flex flex-col items-center justify-center space-y-2 h-44 ${
+        className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors flex flex-col items-center justify-center space-y-2 h-44 outline-none focus-visible:ring-2 focus-visible:ring-slate-950 ${
           isDragging
             ? 'border-slate-900 bg-slate-50'
             : 'border-slate-200 hover:border-slate-300 bg-white'
@@ -137,7 +145,8 @@ export const UploadsSection: React.FC<UploadsSectionProps> = ({
           ref={fileInputRef}
           onChange={handleFileSelect}
           multiple
-          className="hidden"
+          aria-hidden="true"
+          className="absolute opacity-0 w-[1px] h-[1px] overflow-hidden pointer-events-none"
         />
         <UploadCloud className="h-8 w-8 text-slate-400" />
         <div className="space-y-0.5">
@@ -170,6 +179,7 @@ export const UploadsSection: React.FC<UploadsSectionProps> = ({
                     <span>{formatBytes(file.size)}</span>
                     <button
                       type="button"
+                      aria-label={`Remove ${file.name}`} // 6. Added aria-label for screen readers
                       onClick={() => removeSelectedFile(index)}
                       className="text-red-500 hover:text-red-700 cursor-pointer font-semibold"
                     >

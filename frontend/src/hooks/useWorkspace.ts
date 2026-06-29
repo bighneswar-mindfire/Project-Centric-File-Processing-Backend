@@ -61,7 +61,6 @@ export const useWorkspace = (projectId: string | undefined) => {
           setFiles(freshFiles.data);
         }
       } catch (err) {
-        // eslint-disable-next-line no-console
         console.error('Polling error:', err);
       }
     }, 2000);
